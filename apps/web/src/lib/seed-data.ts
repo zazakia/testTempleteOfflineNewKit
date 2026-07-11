@@ -1,0 +1,101 @@
+/**
+ * ─── Seed Data — CDA-Compliant Chart of Accounts ────────────
+ * Pre-populates the chart of accounts on first launch.
+ * Philippine Cooperative standard chart of accounts.
+ */
+
+import type { ChartOfAccount } from '@repo/entity-accounting'
+
+export const DEFAULT_CHART_OF_ACCOUNTS: Array<Omit<ChartOfAccount, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'version' | 'createdBy' | 'updatedBy' | 'tenantId'>> = [
+  // ===== ASSETS (1xx) =====
+  { code: '100', name: 'ASSETS', accountType: 'asset', normalBalance: 'debit', isHeader: true, sortOrder: 1, is_active: true },
+  { code: '110', name: 'Cash and Cash Equivalents', accountType: 'asset', normalBalance: 'debit', parentCode: '100', sortOrder: 2, is_active: true },
+  { code: '111', name: 'Cash on Hand', accountType: 'asset', normalBalance: 'debit', parentCode: '110', sortOrder: 3, is_active: true },
+  { code: '112', name: 'Cash in Bank', accountType: 'asset', normalBalance: 'debit', parentCode: '110', sortOrder: 4, is_active: true },
+  { code: '113', name: 'Petty Cash Fund', accountType: 'asset', normalBalance: 'debit', parentCode: '110', sortOrder: 5, is_active: true },
+  { code: '120', name: 'Loans and Receivables', accountType: 'asset', normalBalance: 'debit', parentCode: '100', sortOrder: 6, is_active: true },
+  { code: '121', name: 'Loans Receivable — Current', accountType: 'asset', normalBalance: 'debit', parentCode: '120', sortOrder: 7, is_active: true },
+  { code: '122', name: 'Loans Receivable — Past Due', accountType: 'asset', normalBalance: 'debit', parentCode: '120', sortOrder: 8, is_active: true },
+  { code: '123', name: 'Loans Receivable — Restructured', accountType: 'asset', normalBalance: 'debit', parentCode: '120', sortOrder: 9, is_active: true },
+  { code: '124', name: 'Interest Receivable', accountType: 'asset', normalBalance: 'debit', parentCode: '120', sortOrder: 10, is_active: true },
+  { code: '125', name: 'Allowance for Probable Losses', accountType: 'asset', normalBalance: 'credit', parentCode: '120', sortOrder: 11, is_active: true },
+  { code: '130', name: 'Investments', accountType: 'asset', normalBalance: 'debit', parentCode: '100', sortOrder: 12, is_active: true },
+  { code: '131', name: 'Time Deposits', accountType: 'asset', normalBalance: 'debit', parentCode: '130', sortOrder: 13, is_active: true },
+  { code: '132', name: 'Government Securities', accountType: 'asset', normalBalance: 'debit', parentCode: '130', sortOrder: 14, is_active: true },
+  { code: '140', name: 'Property and Equipment', accountType: 'asset', normalBalance: 'debit', parentCode: '100', sortOrder: 15, is_active: true },
+  { code: '141', name: 'Land', accountType: 'asset', normalBalance: 'debit', parentCode: '140', sortOrder: 16, is_active: true },
+  { code: '142', name: 'Building and Improvements', accountType: 'asset', normalBalance: 'debit', parentCode: '140', sortOrder: 17, is_active: true },
+  { code: '143', name: 'Office Equipment', accountType: 'asset', normalBalance: 'debit', parentCode: '140', sortOrder: 18, is_active: true },
+  { code: '144', name: 'Furniture and Fixtures', accountType: 'asset', normalBalance: 'debit', parentCode: '140', sortOrder: 19, is_active: true },
+  { code: '145', name: 'Transportation Equipment', accountType: 'asset', normalBalance: 'debit', parentCode: '140', sortOrder: 20, is_active: true },
+  { code: '146', name: 'Accumulated Depreciation', accountType: 'asset', normalBalance: 'credit', parentCode: '140', sortOrder: 21, is_active: true },
+  { code: '150', name: 'Other Assets', accountType: 'asset', normalBalance: 'debit', parentCode: '100', sortOrder: 22, is_active: true },
+  { code: '151', name: 'Prepaid Expenses', accountType: 'asset', normalBalance: 'debit', parentCode: '150', sortOrder: 23, is_active: true },
+  { code: '152', name: 'Subscription Receivable', accountType: 'asset', normalBalance: 'debit', parentCode: '150', sortOrder: 24, is_active: true },
+
+  // ===== LIABILITIES (2xx) =====
+  { code: '200', name: 'LIABILITIES', accountType: 'liability', normalBalance: 'credit', isHeader: true, sortOrder: 25, is_active: true },
+  { code: '210', name: 'Member Deposits and Savings', accountType: 'liability', normalBalance: 'credit', parentCode: '200', sortOrder: 26, is_active: true },
+  { code: '211', name: 'Regular Savings Deposits', accountType: 'liability', normalBalance: 'credit', parentCode: '210', sortOrder: 27, is_active: true },
+  { code: '212', name: 'Time Deposits', accountType: 'liability', normalBalance: 'credit', parentCode: '210', sortOrder: 28, is_active: true },
+  { code: '220', name: 'Loans Payable', accountType: 'liability', normalBalance: 'credit', parentCode: '200', sortOrder: 29, is_active: true },
+  { code: '221', name: 'Loans Payable — Banks', accountType: 'liability', normalBalance: 'credit', parentCode: '220', sortOrder: 30, is_active: true },
+  { code: '222', name: 'Loans Payable — Other Institutions', accountType: 'liability', normalBalance: 'credit', parentCode: '220', sortOrder: 31, is_active: true },
+  { code: '230', name: 'Accounts Payable', accountType: 'liability', normalBalance: 'credit', parentCode: '200', sortOrder: 32, is_active: true },
+  { code: '231', name: 'Accounts Payable — Trade', accountType: 'liability', normalBalance: 'credit', parentCode: '230', sortOrder: 33, is_active: true },
+  { code: '232', name: 'Accounts Payable — Others', accountType: 'liability', normalBalance: 'credit', parentCode: '230', sortOrder: 34, is_active: true },
+  { code: '240', name: 'Accrued Expenses', accountType: 'liability', normalBalance: 'credit', parentCode: '200', sortOrder: 35, is_active: true },
+  { code: '250', name: 'Other Liabilities', accountType: 'liability', normalBalance: 'credit', parentCode: '200', sortOrder: 36, is_active: true },
+  { code: '251', name: 'Withholding Tax Payable', accountType: 'liability', normalBalance: 'credit', parentCode: '250', sortOrder: 37, is_active: true },
+  { code: '252', name: 'SSS/PhilHealth/Pag-IBIG Payable', accountType: 'liability', normalBalance: 'credit', parentCode: '250', sortOrder: 38, is_active: true },
+
+  // ===== EQUITY (3xx) =====
+  { code: '300', name: 'EQUITY', accountType: 'equity', normalBalance: 'credit', isHeader: true, sortOrder: 39, is_active: true },
+  { code: '310', name: 'Share Capital', accountType: 'equity', normalBalance: 'credit', parentCode: '300', sortOrder: 40, is_active: true },
+  { code: '311', name: 'Common Share Capital', accountType: 'equity', normalBalance: 'credit', parentCode: '310', sortOrder: 41, is_active: true },
+  { code: '312', name: 'Preferred Share Capital', accountType: 'equity', normalBalance: 'credit', parentCode: '310', sortOrder: 42, is_active: true },
+  { code: '320', name: 'Statutory Funds', accountType: 'equity', normalBalance: 'credit', parentCode: '300', sortOrder: 43, is_active: true },
+  { code: '321', name: 'Reserve Fund', accountType: 'equity', normalBalance: 'credit', parentCode: '320', sortOrder: 44, is_active: true },
+  { code: '322', name: 'Education and Training Fund', accountType: 'equity', normalBalance: 'credit', parentCode: '320', sortOrder: 45, is_active: true },
+  { code: '323', name: 'Community Development Fund', accountType: 'equity', normalBalance: 'credit', parentCode: '320', sortOrder: 46, is_active: true },
+  { code: '324', name: 'Optional Fund', accountType: 'equity', normalBalance: 'credit', parentCode: '320', sortOrder: 47, is_active: true },
+  { code: '330', name: 'Retained Earnings', accountType: 'equity', normalBalance: 'credit', parentCode: '300', sortOrder: 48, is_active: true },
+  { code: '331', name: 'Undistributed Net Surplus', accountType: 'equity', normalBalance: 'credit', parentCode: '330', sortOrder: 49, is_active: true },
+  { code: '332', name: 'Patronage Refund Payable', accountType: 'equity', normalBalance: 'credit', parentCode: '330', sortOrder: 50, is_active: true },
+  { code: '333', name: 'Interest on Share Capital Payable', accountType: 'equity', normalBalance: 'credit', parentCode: '330', sortOrder: 51, is_active: true },
+
+  // ===== INCOME (4xx) =====
+  { code: '400', name: 'INCOME', accountType: 'income', normalBalance: 'credit', isHeader: true, sortOrder: 52, is_active: true },
+  { code: '410', name: 'Interest Income', accountType: 'income', normalBalance: 'credit', parentCode: '400', sortOrder: 53, is_active: true },
+  { code: '411', name: 'Interest Income — Loans', accountType: 'income', normalBalance: 'credit', parentCode: '410', sortOrder: 54, is_active: true },
+  { code: '412', name: 'Interest Income — Investments', accountType: 'income', normalBalance: 'credit', parentCode: '410', sortOrder: 55, is_active: true },
+  { code: '420', name: 'Service and Other Income', accountType: 'income', normalBalance: 'credit', parentCode: '400', sortOrder: 56, is_active: true },
+  { code: '421', name: 'Loan Processing Fees', accountType: 'income', normalBalance: 'credit', parentCode: '420', sortOrder: 57, is_active: true },
+  { code: '422', name: 'Membership Fees', accountType: 'income', normalBalance: 'credit', parentCode: '420', sortOrder: 58, is_active: true },
+  { code: '423', name: 'Penalties and Surcharges', accountType: 'income', normalBalance: 'credit', parentCode: '420', sortOrder: 59, is_active: true },
+  { code: '430', name: 'Non-Operating Income', accountType: 'income', normalBalance: 'credit', parentCode: '400', sortOrder: 60, is_active: true },
+
+  // ===== EXPENSES (5xx) =====
+  { code: '500', name: 'EXPENSES', accountType: 'expense', normalBalance: 'debit', isHeader: true, sortOrder: 61, is_active: true },
+  { code: '510', name: 'Personnel Expenses', accountType: 'expense', normalBalance: 'debit', parentCode: '500', sortOrder: 62, is_active: true },
+  { code: '511', name: 'Salaries and Wages', accountType: 'expense', normalBalance: 'debit', parentCode: '510', sortOrder: 63, is_active: true },
+  { code: '512', name: 'SSS/PhilHealth/Pag-IBIG Contributions', accountType: 'expense', normalBalance: 'debit', parentCode: '510', sortOrder: 64, is_active: true },
+  { code: '513', name: '13th Month Pay', accountType: 'expense', normalBalance: 'debit', parentCode: '510', sortOrder: 65, is_active: true },
+  { code: '520', name: 'Administrative Expenses', accountType: 'expense', normalBalance: 'debit', parentCode: '500', sortOrder: 66, is_active: true },
+  { code: '521', name: 'Office Supplies', accountType: 'expense', normalBalance: 'debit', parentCode: '520', sortOrder: 67, is_active: true },
+  { code: '522', name: 'Utilities', accountType: 'expense', normalBalance: 'debit', parentCode: '520', sortOrder: 68, is_active: true },
+  { code: '523', name: 'Rent', accountType: 'expense', normalBalance: 'debit', parentCode: '520', sortOrder: 69, is_active: true },
+  { code: '524', name: 'Transportation and Travel', accountType: 'expense', normalBalance: 'debit', parentCode: '520', sortOrder: 70, is_active: true },
+  { code: '525', name: 'Communication', accountType: 'expense', normalBalance: 'debit', parentCode: '520', sortOrder: 71, is_active: true },
+  { code: '530', name: 'Financial Costs', accountType: 'expense', normalBalance: 'debit', parentCode: '500', sortOrder: 72, is_active: true },
+  { code: '531', name: 'Interest Expense — Loans Payable', accountType: 'expense', normalBalance: 'debit', parentCode: '530', sortOrder: 73, is_active: true },
+  { code: '532', name: 'Bank Charges', accountType: 'expense', normalBalance: 'debit', parentCode: '530', sortOrder: 74, is_active: true },
+  { code: '540', name: 'Statutory Fund Allocations', accountType: 'expense', normalBalance: 'debit', parentCode: '500', sortOrder: 75, is_active: true },
+  { code: '541', name: 'Reserve Fund (10%)', accountType: 'expense', normalBalance: 'debit', parentCode: '540', sortOrder: 76, is_active: true },
+  { code: '542', name: 'Education and Training Fund (10%)', accountType: 'expense', normalBalance: 'debit', parentCode: '540', sortOrder: 77, is_active: true },
+  { code: '543', name: 'Community Development Fund (3%)', accountType: 'expense', normalBalance: 'debit', parentCode: '540', sortOrder: 78, is_active: true },
+  { code: '550', name: 'Depreciation', accountType: 'expense', normalBalance: 'debit', parentCode: '500', sortOrder: 79, is_active: true },
+  { code: '560', name: 'Other Expenses', accountType: 'expense', normalBalance: 'debit', parentCode: '500', sortOrder: 80, is_active: true },
+  { code: '561', name: 'Provision for Probable Losses', accountType: 'expense', normalBalance: 'debit', parentCode: '560', sortOrder: 81, is_active: true },
+  { code: '562', name: 'Miscellaneous Expenses', accountType: 'expense', normalBalance: 'debit', parentCode: '560', sortOrder: 82, is_active: true },
+]

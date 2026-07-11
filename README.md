@@ -45,39 +45,73 @@ pnpm dev
 
 Open http://localhost:5173 in your browser.
 
+## Documentation
+
+| Document | Description |
+|---|---|
+| **[📘 Developer Guide](docs/DEVELOPER_GUIDE.md)** | Complete guide: architecture, adding entities, middleware, testing, sync engine, UI components |
+| **[⚡ Cheatsheet](docs/CHEATSHEET.md)** | One-page quick reference for commands, interfaces, patterns |
+| **[📋 PRD](docs/PRD.md)** | Product requirements, feature breakdown, tech stack, roadmap |
+| **[📐 Architecture](docs/architecture.md)** | High-level architecture overview |
+| **[🚀 Deployment](docs/DEPLOYMENT.md)** | Deploy to Netlify, Cloudflare, Vercel, or Docker |
+| **[📝 PLAN](docs/PLAN.md)** | Implementation plan across all 5 phases |
+| **[📌 ADR-001](docs/adr/001-use-turborepo.md)** | Decision: Turborepo + pnpm |
+| **[📌 ADR-002](docs/adr/002-repository-pattern.md)** | Decision: Repository pattern for data access |
+
 ## Project Structure
 
 ```
 packages/
-├── core/              # Interfaces, types, registry, middleware
-├── db-adapter-dexie/  # IndexedDB adapter (web)
-├── ui-core/           # Design system components
-└── entity-customer/   # Customer business module
+├── core/                   # Interfaces, types, registry, middleware, events
+├── db-adapter-dexie/       # IndexedDB adapter (web)
+├── db-adapter-expo-sqlite/ # SQLite adapter (mobile)
+├── db-adapter-tauri-sql/   # SQLite adapter (desktop)
+├── entity-customer/        # Customer business module (example)
+├── ui-core/                # Design system components
+├── sync-engine/            # Push/pull sync, conflict resolution, retry
+├── audit-trail/            # Immutable audit log
+├── multi-tenant/           # Tenant isolation
+├── feature-flags/          # Runtime feature toggles
+├── observability/          # Logging, metrics, health
+├── codegen/                # Entity scaffolding CLI
+└── testing/                # Shared test utilities
 
 apps/
-└── web/               # React + Vite + PWA application
+├── web/                    # React 19 + Vite 6 + PWA
+├── mobile/                 # Expo (iOS/Android)
+├── desktop/                # Tauri v2 (Win/Mac/Linux)
+└── api/                    # Hono sync backend
 ```
 
 ## Adding a New Entity
 
-1. Create `packages/entity-yourname/`
-2. Define types, Zod schemas, service, policies, hooks
-3. Register with `EntityRegistry.register()`
-4. Add repository in `apps/web/src/lib/db.ts`
-5. Add routes in `apps/web/src/router.tsx`
-6. Build your UI
+```bash
+# 1. Generate the scaffold
+pnpm codegen entity Order
+
+# 2. Add repository in apps/web/src/lib/db.ts
+# 3. Add routes in apps/web/src/router.tsx
+# 4. Build your UI pages
+```
+
+For a detailed walkthrough, see the **[Developer Guide → Adding a New Entity](docs/DEVELOPER_GUIDE.md#5-how-to-add-a-new-entity)**.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Monorepo | Turborepo + pnpm |
-| Language | TypeScript 5.x |
-| Web | React 19 + Vite 6 + Tailwind CSS |
-| Mobile | Expo (future) |
-| Desktop | Tauri v2 (future) |
-| Local DB | Dexie.js (IndexedDB) |
-| Validation | Zod |
-| State | TanStack Query + Zustand |
+| Language | TypeScript 5.x (strict mode) |
+| Web | React 19 + Vite 6 + Tailwind CSS 3.4 |
+| Mobile | Expo 52 (iOS/Android) |
+| Desktop | Tauri v2 (Win/Mac/Linux) |
+| Local DB (Web) | Dexie.js 4.x (IndexedDB) |
+| Local DB (Mobile) | expo-sqlite 14.x |
+| Local DB (Desktop) | @tauri-apps/plugin-sql 2.x |
+| API Server | Hono 4.x |
+| Validation | Zod 3.23 |
+| Client State | Zustand 5.x |
+| Server State | TanStack Query 5.x |
+| Routing | TanStack Router 1.x |
 | PWA | vite-plugin-pwa + Workbox |
-| UI | Custom design system (Radix-based, future) |
+| UI | Custom design system (6+ primitives) |

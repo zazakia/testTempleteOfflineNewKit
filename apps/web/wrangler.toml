@@ -1,0 +1,12 @@
+# ─── Cloudflare Pages Deployment Configuration ────────────────
+# Deploy: npx wrangler pages deploy dist
+# Or connect GitHub repo to Cloudflare Pages dashboard
+# Build command: cd ../.. && pnpm install && cd apps/web && npx vite build
+# Build output: apps/web/dist
+# Root directory: apps/web
+
+name = "cooperp"
+compatibility_date = "2026-07-09"
+
+[env.production]
+name = "cooperp-prod"

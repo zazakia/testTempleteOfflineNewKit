@@ -16,6 +16,8 @@
     "@repo/db-dexie": "workspace:*",
     "@repo/ui-core": "workspace:*",
     "@repo/entity-customer": "workspace:*",
+    "@repo/feature-flags": "workspace:*",
+    "@repo/multi-tenant": "workspace:*",
     "@tanstack/react-router": "^1.50.0",
     "@tanstack/react-query": "^5.50.0",
     "react": "^19.0.0",

@@ -189,3 +189,21 @@ export interface SyncStatusInfo {
  * Pagination type selection.
  */
 export type PaginationType = 'cursor' | 'offset'
+
+/**
+ * Tenant metadata — JSON/JSONB blob that drives per-tenant customization.
+ * Stored locally and synced to Supabase. Interpreted at runtime by the metadata engine.
+ *
+ * Example payload:
+ *   { loan: { interestFormulas: {...}, maxTerm: 60 }, ui: { theme: {...}, customFields: [...] } }
+ */
+export interface TenantMetadata {
+  /** Tenant ID (PK) */
+  tenantId: string
+  /** Arbitrary JSON configuration blob */
+  metadata: Record<string, unknown>
+  /** Optimistic concurrency version */
+  version: number
+  /** Last update timestamp */
+  updatedAt: TimestampMillis
+}

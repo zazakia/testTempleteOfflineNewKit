@@ -157,7 +157,7 @@ featureFlags.defineMany([
   {
     key: 'debug.error-details',
     description: 'Show detailed error messages',
-    enabled: false,
+    enabled: true,
     rules: [{ target: 'environment', environments: ['development'] }],
   },
 ])

@@ -4,17 +4,18 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
+  base: '/',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'robots.txt'],
       manifest: {
-        name: 'Offline First Business App',
-        short_name: 'OfflineBiz',
-        description: 'Enterprise offline-first business application starter kit',
-        theme_color: '#2563eb',
-        background_color: '#ffffff',
+        name: 'CoopERP',
+        short_name: 'CoopERP',
+        description: 'Enterprise cooperative ERP for Philippine cooperatives — offline-first',
+        theme_color: '#16a34a',
+        background_color: '#f0fdf4',
         display: 'standalone',
         orientation: 'any',
         start_url: '/',
@@ -56,6 +57,13 @@ export default defineConfig({
       '@repo/db-dexie': path.resolve(__dirname, '../../packages/db-adapter-dexie/src'),
       '@repo/ui-core': path.resolve(__dirname, '../../packages/ui-core/src'),
       '@repo/entity-customer': path.resolve(__dirname, '../../packages/entity-customer/src'),
+      '@repo/entity-member': path.resolve(__dirname, '../../packages/entity-member/src'),
+      '@repo/entity-share-capital': path.resolve(__dirname, '../../packages/entity-share-capital/src'),
+      '@repo/entity-savings': path.resolve(__dirname, '../../packages/entity-savings/src'),
+      '@repo/entity-loan': path.resolve(__dirname, '../../packages/entity-loan/src'),
+      '@repo/entity-accounting': path.resolve(__dirname, '../../packages/entity-accounting/src'),
+      '@repo/entity-collection': path.resolve(__dirname, '../../packages/entity-collection/src'),
+      '@repo/entity-governance': path.resolve(__dirname, '../../packages/entity-governance/src'),
     },
   },
   server: {

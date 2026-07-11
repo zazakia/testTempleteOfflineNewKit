@@ -21,13 +21,16 @@ import type {
   Repository,
   WriteOptions,
   CursorQuery,
+  CursorResult,
   OffsetQuery,
+  OffsetResult,
   EntityId,
   TimestampMillis,
   ChangeLogEntry,
   FilterRule,
 } from '@repo/core'
-import { isCursorQuery } from '@repo/core'
+import { isCursorQuery, MiddlewarePipeline, EntityRegistry } from '@repo/core'
+import type { MiddlewareContext, HookContext, EntityHooks } from '@repo/core'
 
 // ─── Database Class ────────────────────────────────────────
 
@@ -37,10 +40,95 @@ class OfflineDatabase extends Dexie {
   constructor(dbName: string) {
     super(dbName)
 
-    // Define all entity tables and the change log
+    // ─── Cooperative ERP Schema ──────────────────────────────
+    // Core domain: Members & Profiles
     this.version(1).stores({
+      // System
       changeLog: '++id, entityType, entityId, status, timestamp, tenantId',
+      user_profiles: 'id, email, role, is_active, createdAt, updatedAt, deletedAt',
+      app_settings: 'id, key, scope, is_active, createdAt, updatedAt, deletedAt',
+      action_logs: 'id, entityType, entityId, action, performedBy, timestamp, createdAt, [entityType+entityId], [performedBy+timestamp]',
+      feature_flags: 'id, key, enabled, category, sort_order, createdAt, updatedAt, deletedAt',
+      role_permissions: 'id, role, permission_key, enabled, createdAt, updatedAt, deletedAt, [role+permission_key]',
+
+      // Member Management
+      members: 'id, tenantId, membershipNumber, membershipStatus, membershipType, collectorId, areaId, firstName, lastName, fullName, phone, email, barangay, cityMunicipality, province, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+membershipStatus], [membershipNumber]',
+      member_dependents: 'id, memberId, name, relationship, dateOfBirth, createdAt, updatedAt, deletedAt, [memberId]',
+
+      // Share Capital
+      share_capital_transactions: 'id, memberId, transactionType, shareType, date, accountCode, amount, runningBalanceShares, runningBalanceAmount, referenceNumber, recordedBy, createdAt, updatedAt, deletedAt, [memberId], [memberId+date]',
+
+      // Savings & Deposits
+      savings_accounts: 'id, memberId, accountType, accountNumber, balance, interestRate, status, openedDate, createdAt, updatedAt, deletedAt, [memberId]',
+      savings_transactions: 'id, savingsAccountId, memberId, type, amount, date, referenceId, notes, createdAt, updatedAt, deletedAt, [memberId], [savingsAccountId+date]',
+
+      // Loan Management
+      loan_products: 'id, productType, label, is_active, defaultRatePercent, defaultTerm, defaultFrequency, sortOrder, createdAt, updatedAt, deletedAt',
+      loan_applications: 'id, borrowerId, productId, amountApplied, amountApproved, purpose, applicationDate, status, approvedBy, approvedAt, notes, createdAt, updatedAt, deletedAt, [borrowerId], [status+applicationDate]',
+      loans: 'id, borrowerId, loanNumber, loanType, principalAmount, interestRate, interestType, term, termUnit, frequency, totalAmount, installmentAmount, releaseDate, firstPaymentDate, maturityDate, status, collectorId, isDelinquent, delinquentSince, dpd, agingBucket, encodedBy, approvedBy, approvedAt, notes, createdAt, updatedAt, deletedAt, [borrowerId], [status], [collectorId+status], [borrowerId+status]',
+      payment_schedules: 'id, loanId, dueDate, scheduledAmount, principalAmount, interestAmount, feesAmount, status, createdAt, updatedAt, deletedAt, [loanId], [loanId+status], [loanId+dueDate]',
+      payments: 'id, loanId, borrowerId, scheduleId, collectorId, amount, paymentDate, paymentType, receiptNumber, notes, encodedAt, createdAt, updatedAt, deletedAt, [loanId], [borrowerId], [collectorId+paymentDate], [paymentDate]',
+      loan_penalties: 'id, loanId, amount, penaltyDate, reason, createdAt, updatedAt, deletedAt, [loanId], [loanId+penaltyDate]',
+      guarantors: 'id, loanId, applicationId, guarantorName, contactNo, relationship, memberId, createdAt, updatedAt, deletedAt, [loanId], [memberId]',
+
+      // Collections
+      collectors: 'id, fullName, authId, is_active, createdAt, updatedAt, deletedAt',
+      collection_groups: 'id, name, collectorId, collectionDay, groupType, areaId, is_active, createdAt, updatedAt, deletedAt, [collectorId], [areaId]',
+      collection_logs: 'id, collectorId, logDate, totalCollected, cashOnHandStart, cashOnHandEnd, notes, createdAt, updatedAt, deletedAt, [collectorId+logDate]',
+      remittances: 'id, collectorId, amount, remittanceDate, status, approvedBy, notes, createdAt, updatedAt, deletedAt, [collectorId], [status]',
+      areas: 'id, name, code, parentAreaId, aoId, is_active, createdAt, updatedAt, deletedAt, [parentAreaId]',
+
+      // Accounting
+      chart_of_accounts: 'id, code, name, accountType, normalBalance, parentCode, isHeader, is_active, sortOrder, createdAt, updatedAt, deletedAt, [accountType], [code]',
+      journal_entries: 'id, entryDate, referenceNumber, description, entryType, sourceTable, sourceId, postedBy, isPosted, totalDebit, totalCredit, fiscalYear, fiscalMonth, createdAt, updatedAt, deletedAt, [entryDate], [referenceNumber], [sourceTable+sourceId], [fiscalYear+fiscalMonth]',
+      journal_entry_lines: 'id, journalEntryId, accountCode, accountName, debitAmount, creditAmount, description, businessUnitId, moduleSourceTable, moduleSourceId, createdAt, updatedAt, deletedAt, [journalEntryId], [accountCode]',
+      financial_periods: 'id, fiscalYear, fiscalMonth, periodStart, periodEnd, isClosed, closedAt, createdAt, updatedAt, deletedAt, [fiscalYear]',
+      financial_snapshots: 'id, snapshotDate, totalAssets, totalEquity, totalLiabilities, loanLossReserve, operatingRevenue, financialCosts, createdAt, updatedAt, deletedAt',
+
+      // Payroll
+      employees: 'id, name, role, baseSalary, is_active, createdAt, updatedAt, deletedAt',
+      payrolls: 'id, employeeId, periodStart, periodEnd, baseSalary, deductions, allowances, netPay, status, createdAt, updatedAt, deletedAt, [employeeId], [status+periodStart]',
+
+      // Governance
+      committees: 'id, name, type, is_active, createdAt, updatedAt, deletedAt',
+      committee_members: 'id, committeeId, memberId, position, termStart, termEnd, is_active, createdAt, updatedAt, deletedAt, [committeeId], [memberId]',
+      board_resolutions: 'id, resolutionNumber, title, description, resolutionDate, type, status, approvedBy, referenceEntityType, referenceEntityId, createdAt, updatedAt, deletedAt, [resolutionNumber]',
+      meeting_attendance: 'id, memberId, meetingType, meetingDate, isPresent, notes, createdAt, updatedAt, deletedAt, [memberId]',
+
+      // Statutory Funds
+      statutory_fund_allocations: 'id, fiscalYear, fiscalMonth, fundType, amount, percentage, notes, performedBy, createdAt, updatedAt, deletedAt, [fiscalYear+fundType]',
+
+      // Cash & Bank
+      cash_transactions: 'id, transactionDate, particulars, type, amount, remarks, recordedBy, createdAt, updatedAt, deletedAt, [transactionDate], [type]',
+      bank_accounts: 'id, bankName, accountName, accountNumber, startingBalance, createdAt, updatedAt, deletedAt',
+      bank_transactions: 'id, bankAccountId, transactionDate, type, amount, particulars, remarks, createdAt, updatedAt, deletedAt, [bankAccountId], [bankAccountId+transactionDate]',
+
+      // Expenses
+      expenses: 'id, category, description, payee, tin, invoiceNumber, vatAmount, amount, expenseDate, frequency, encodedBy, createdAt, updatedAt, deletedAt, [category+expenseDate], [expenseDate]',
+      expense_categories: 'id, name, is_active, createdAt, updatedAt, deletedAt',
+
+      // File Cases (Legal)
+      file_cases: 'id, loanId, borrowerId, caseNumber, filedDate, status, notes, filedBy, createdAt, updatedAt, deletedAt, [borrowerId], [status]',
+
+      // Business Units / Modules
+      business_units: 'id, name, slug, moduleId, is_active, description, createdAt, updatedAt, deletedAt, [slug]',
+      module_transactions: 'id, moduleId, businessUnitId, sourceTable, sourceId, amount, transactionType, postedAt, fiscalYear, fiscalMonth, createdAt, updatedAt, deletedAt, [sourceTable+sourceId], [moduleId]',
+
+      // Water Station Module
+      ws_customers: 'id, name, phone, address, isMember, memberId, is_active, createdAt, updatedAt, deletedAt, [memberId]',
+      ws_deliveries: 'id, customerId, deliveryDate, gallons, pricePerGallon, totalAmount, status, createdAt, updatedAt, deletedAt, [customerId], [deliveryDate]',
+      ws_containers: 'id, customerId, containerType, quantityOwned, quantityLoaned, createdAt, updatedAt, deletedAt, [customerId]',
+      ws_payments: 'id, customerId, deliveryId, paymentDate, amount, paymentMethod, createdAt, updatedAt, deletedAt, [customerId], [paymentDate]',
+      ws_expenses: 'id, category, amount, expenseDate, description, createdAt, updatedAt, deletedAt',
+
+      // Legacy (keep for compatibility)
       customer: 'id, tenantId, email, status, company, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+status], [tenantId+createdAt]',
+    })
+
+    // ─── v2: Tenant Metadata Store ───────────────────────
+    // JSON/JSONB blob per tenant for runtime customization
+    this.version(2).stores({
+      tenant_metadata: 'tenantId',
     })
 
     this.changeLog = this.table('changeLog')
@@ -224,52 +312,147 @@ function ensureTableSchema(entityName: string, extraIndexes?: string[]): void {
 // ─── Repository Factory ────────────────────────────────────
 
 /**
+ * Factory for building a MiddlewareContext per operation.
+ * Called on every CRUD op so context (e.g. tenantId) is always fresh.
+ */
+export type ContextFactory = () => Pick<MiddlewareContext, 'userId' | 'tenantId' | 'timestamp' | 'metadata'>
+
+/**
+ * Options for createDexieRepository.
+ */
+export interface DexieRepositoryOptions {
+  /** Custom database name (defaults to 'OfflineFirstApp') */
+  dbName?: string
+  /** Middleware pipeline — tenant isolation, audit, etc. */
+  middleware?: MiddlewarePipeline<BaseEntity>
+  /** Provides per-operation context (userId, tenantId from auth) */
+  contextFactory?: ContextFactory
+}
+
+/**
  * Create a Dexie-backed Repository for a given entity.
  *
  * Usage:
  *   const customerRepo = createDexieRepository<Customer>('customer')
  *   const customers = await customerRepo.findMany({ limit: 50 })
+ *
+ * With tenant middleware:
+ *   const pipeline = new MiddlewarePipeline()
+ *   pipeline.use(createTenantMiddleware('customer'))
+ *   const repo = createDexieRepository<Customer>('customer', { middleware: pipeline, contextFactory })
  */
 export function createDexieRepository<T extends BaseEntity>(
   entityName: string,
-  options?: {
-    dbName?: string
-  },
+  options?: DexieRepositoryOptions,
 ): Repository<T> {
   const db = getDb(options?.dbName)
+  const pipeline = options?.middleware
+  const contextFactory = options?.contextFactory
   
   // Verify the table exists (schema must be defined in OfflineDatabase constructor)
   ensureTableSchema(entityName)
 
   const table = db.table<T, string>(entityName)
 
+  /** Resolve entity hooks from the EntityRegistry (if registered) */
+  let hooks: EntityHooks<BaseEntity> | undefined
+  try {
+    if (EntityRegistry.has(entityName)) {
+      hooks = EntityRegistry.get(entityName).hooks as EntityHooks<BaseEntity>
+    }
+  } catch {
+    // Entity not registered — hooks are optional
+    hooks = undefined
+  }
+
+  /** Convert MiddlewareContext to HookContext for hook calls */
+  function toHookCtx(mwCtx: MiddlewareContext): HookContext {
+    return {
+      userId: mwCtx.userId,
+      tenantId: mwCtx.tenantId,
+      timestamp: mwCtx.timestamp,
+      metadata: mwCtx.metadata,
+    }
+  }
+
+  /**
+   * Build a full MiddlewareContext for the current operation.
+   * Falls back to safe defaults if no contextFactory is provided.
+   */
+  function buildCtx(
+    operation: MiddlewareContext['operation'],
+  ): MiddlewareContext {
+    const base = contextFactory?.() ?? { userId: undefined as string | undefined, tenantId: undefined as string | undefined, timestamp: undefined as number | undefined, metadata: undefined as Record<string, unknown> | undefined }
+    return {
+      userId: base.userId ?? 'anonymous',
+      tenantId: base.tenantId ?? 'default',
+      timestamp: base.timestamp ?? Date.now(),
+      entityName,
+      operation,
+      metadata: base.metadata,
+    }
+  }
+
   // ─── Repository Implementation ───────────────────────
 
   return {
     async findById(id: EntityId, _options?: WriteOptions): Promise<T | null> {
       try {
-        const item = await table.get(id)
+        const ctx = buildCtx('read')
+
+        // Run before-read hooks
+        if (hooks?.beforeRead) {
+          await hooks.beforeRead(id, toHookCtx(ctx))
+        }
+
+        if (pipeline) {
+          await pipeline.runBeforeRead(id, ctx)
+        }
+
+        let item: T | null = await table.get(id) ?? null
         if (!item) return null
-        if (item.deletedAt) return null // Soft-deleted
+        if (item.deletedAt) return null
+
+        // Run after-read hooks (can transform the returned entity)
+        if (hooks?.afterRead) {
+          item = await hooks.afterRead(item, toHookCtx(ctx)) as T | null
+        }
+
+        if (pipeline) {
+          return await pipeline.runAfterRead(item, ctx) as T | null
+        }
+
         return item
       } catch (error) {
+        if (error instanceof AppError) throw error
         throw new DatabaseError(`Failed to find ${entityName} by id`, { id, error })
       }
     },
 
     async findMany(query: QueryParams<T>, _options?: WriteOptions): Promise<QueryResultType<T>> {
       try {
+        const ctx = buildCtx('read')
+
+        // Let middleware mutate the query (e.g., inject tenant filter)
+        let effectiveQuery = query
+        if (pipeline) {
+          effectiveQuery = await pipeline.runBeforeQuery(
+            query as unknown as Record<string, unknown>,
+            ctx,
+          ) as unknown as QueryParams<T>
+        }
+
         // Get all items from table
         let allItems = await table.toArray()
 
         // Apply filters in memory
         let filtered = allItems
-        if (!query.includeDeleted) {
+        if (!effectiveQuery.includeDeleted) {
           filtered = filtered.filter((item) => item.deletedAt === null)
         }
 
-        if (query.filter) {
-          for (const rule of query.filter) {
+        if (effectiveQuery.filter) {
+          for (const rule of effectiveQuery.filter) {
             filtered = filtered.filter((item) => {
               const itemVal = (item as any)[rule.field]
               switch (rule.operator) {
@@ -299,8 +482,8 @@ export function createDexieRepository<T extends BaseEntity>(
           }
         }
 
-        if (query.search) {
-          const searchLower = query.search.toLowerCase()
+        if (effectiveQuery.search) {
+          const searchLower = effectiveQuery.search.toLowerCase()
           filtered = filtered.filter((item) => {
             const itemAny = item as any
             return (
@@ -311,8 +494,8 @@ export function createDexieRepository<T extends BaseEntity>(
         }
 
         // Apply sorting
-        if (query.sort && query.sort.length > 0) {
-          filtered = applySort(filtered, query.sort)
+        if (effectiveQuery.sort && effectiveQuery.sort.length > 0) {
+          filtered = applySort(filtered, effectiveQuery.sort)
         } else {
           filtered = filtered.reverse() // newest first
         }
@@ -320,12 +503,12 @@ export function createDexieRepository<T extends BaseEntity>(
         const total = filtered.length
 
         // Apply pagination
-        if (isCursorQuery(query)) {
-          const limit = query.limit ?? 50
+        if (isCursorQuery(effectiveQuery)) {
+          const limit = effectiveQuery.limit ?? 50
           let startIndex = 0
 
-          if (query.cursor) {
-            const cursorIndex = filtered.findIndex((item) => item.id === query.cursor)
+          if (effectiveQuery.cursor) {
+            const cursorIndex = filtered.findIndex((item) => item.id === effectiveQuery.cursor)
             if (cursorIndex >= 0) {
               startIndex = cursorIndex + 1
             }
@@ -334,17 +517,27 @@ export function createDexieRepository<T extends BaseEntity>(
           const items = filtered.slice(startIndex, startIndex + limit)
           const nextCursor = items.length === limit ? items[items.length - 1]?.id : undefined
 
-          return { items, nextCursor, total }
+          const result: QueryResultType<T> = { items, nextCursor, total }
+          if (pipeline) {
+            const afterItems = await pipeline.runAfterQuery(items, ctx)
+            return { items: afterItems as unknown as T[], nextCursor, total } as CursorResult<T>
+          }
+          return result
         } else {
-          const offsetQuery = query as OffsetQuery
+          const offsetQuery = effectiveQuery as OffsetQuery
           const page = offsetQuery.page ?? 1
           const pageSize = offsetQuery.pageSize ?? 50
           const offset = (page - 1) * pageSize
 
           const items = filtered.slice(offset, offset + pageSize)
 
+          let finalItems: T[] = items
+          if (pipeline) {
+            finalItems = await pipeline.runAfterQuery(items, ctx) as unknown as T[]
+          }
+
           return {
-            items,
+            items: finalItems,
             total,
             page,
             pageSize,
@@ -358,11 +551,25 @@ export function createDexieRepository<T extends BaseEntity>(
     },
 
     async create(input: CreateInput<T>, options?: WriteOptions): Promise<T> {
-      const timestamp = options?.performedAt ?? Date.now()
-      const userId = options?.performedBy ?? 'system'
+      const ctx = buildCtx('create')
+
+      // Run before-create middleware (e.g., tenant isolation injects tenantId)
+      let preparedInput = input as unknown as Record<string, unknown>
+      if (pipeline) {
+        preparedInput = await pipeline.runBeforeCreate(preparedInput, ctx)
+      }
+
+      const timestamp = options?.performedAt ?? ctx.timestamp
+      const userId = options?.performedBy ?? ctx.userId
+
+      // Run before-create hooks (business logic: validation, normalization)
+      if (hooks?.beforeCreate) {
+        const hookCtx = toHookCtx(ctx)
+        preparedInput = await hooks.beforeCreate(preparedInput, hookCtx)
+      }
 
       const entity = {
-        ...input,
+        ...preparedInput,
         id: uuidv4(),
         createdAt: timestamp,
         updatedAt: timestamp,
@@ -384,32 +591,62 @@ export function createDexieRepository<T extends BaseEntity>(
           options,
         )
 
+        // Run after-create hooks (side effects: notifications, analytics)
+        if (hooks?.afterCreate) {
+          await hooks.afterCreate(entity, toHookCtx(ctx))
+        }
+
+        // Run after-create middleware
+        if (pipeline) {
+          await pipeline.runAfterCreate(entity, ctx)
+        }
+
         return entity
       } catch (error) {
+        if (pipeline) {
+          await pipeline.handleError(
+            error instanceof Error ? error : new DatabaseError(String(error)),
+            ctx,
+          )
+        }
         throw new DatabaseError(`Failed to create ${entityName}`, { input, error })
       }
     },
 
     async update(id: EntityId, input: UpdateInput<T>, options?: WriteOptions): Promise<T> {
+      const ctx = buildCtx('update')
+
       try {
         const existing = await table.get(id)
         if (!existing) {
           throw new NotFoundError(entityName, id)
         }
 
-        // Optimistic concurrency check
-        if (input.version !== existing.version) {
-          throw new ConflictError(entityName, id, input.version, existing.version)
+        // Run before-update middleware (e.g., prevent tenantId change)
+        let preparedInput = input as unknown as Record<string, unknown>
+        if (pipeline) {
+          preparedInput = await pipeline.runBeforeUpdate(id, preparedInput, ctx)
         }
 
-        const timestamp = options?.performedAt ?? Date.now()
-        const userId = options?.performedBy ?? 'system'
+        // Run before-update hooks (business logic)
+        if (hooks?.beforeUpdate) {
+          preparedInput = await hooks.beforeUpdate(id, preparedInput, toHookCtx(ctx))
+        }
+
+        // Optimistic concurrency check
+        const inputVersion = (preparedInput as any).version ?? input.version
+        if (inputVersion !== existing.version) {
+          throw new ConflictError(entityName, id, inputVersion, existing.version)
+        }
+
+        const timestamp = options?.performedAt ?? ctx.timestamp
+        const userId = options?.performedBy ?? ctx.userId
 
         const previousData = { ...existing } as unknown as Record<string, unknown>
 
         const updated = {
           ...existing,
-          ...input,
+          ...preparedInput,
           id,
           createdAt: existing.createdAt,
           createdBy: existing.createdBy,
@@ -429,22 +666,50 @@ export function createDexieRepository<T extends BaseEntity>(
           options,
         )
 
+        // Run after-update hooks
+        if (hooks?.afterUpdate) {
+          await hooks.afterUpdate(updated, toHookCtx(ctx))
+        }
+
+        // Run after-update middleware
+        if (pipeline) {
+          await pipeline.runAfterUpdate(updated, ctx)
+        }
+
         return updated
       } catch (error) {
+        if (pipeline) {
+          await pipeline.handleError(
+            error instanceof Error ? error : new DatabaseError(String(error)),
+            ctx,
+          )
+        }
         if (error instanceof AppError) throw error
         throw new DatabaseError(`Failed to update ${entityName}`, { id, input, error })
       }
     },
 
     async delete(id: EntityId, options?: WriteOptions): Promise<void> {
+      const ctx = buildCtx('delete')
+
       try {
         const existing = await table.get(id)
         if (!existing) {
           throw new NotFoundError(entityName, id)
         }
 
-        const timestamp = options?.performedAt ?? Date.now()
-        const userId = options?.performedBy ?? 'system'
+        // Run before-delete middleware
+        if (pipeline) {
+          await pipeline.runBeforeDelete(id, ctx)
+        }
+
+        // Run before-delete hooks
+        if (hooks?.beforeDelete) {
+          await hooks.beforeDelete(id, toHookCtx(ctx))
+        }
+
+        const timestamp = options?.performedAt ?? ctx.timestamp
+        const userId = options?.performedBy ?? ctx.userId
 
         // Soft delete
         const updated = {
@@ -465,7 +730,23 @@ export function createDexieRepository<T extends BaseEntity>(
           { ...existing } as unknown as Record<string, unknown>,
           options,
         )
+
+        // Run after-delete hooks
+        if (hooks?.afterDelete) {
+          await hooks.afterDelete(updated, toHookCtx(ctx))
+        }
+
+        // Run after-delete middleware
+        if (pipeline) {
+          await pipeline.runAfterDelete(updated, ctx)
+        }
       } catch (error) {
+        if (pipeline) {
+          await pipeline.handleError(
+            error instanceof Error ? error : new DatabaseError(String(error)),
+            ctx,
+          )
+        }
         if (error instanceof AppError) throw error
         throw new DatabaseError(`Failed to delete ${entityName}`, { id, error })
       }
@@ -473,14 +754,22 @@ export function createDexieRepository<T extends BaseEntity>(
 
     async count(query: Pick<CursorQuery, 'filter' | 'search' | 'includeDeleted'>): Promise<number> {
       try {
+        const ctx = buildCtx('read')
+
+        // Let middleware inject tenant filter on the query
+        let effectiveQuery = query as Record<string, unknown>
+        if (pipeline) {
+          effectiveQuery = await pipeline.runBeforeQuery(effectiveQuery, ctx)
+        }
+
         let items = await table.toArray()
 
-        if (!query.includeDeleted) {
+        if (!(effectiveQuery as any).includeDeleted) {
           items = items.filter((item) => item.deletedAt === null)
         }
 
-        if (query.filter) {
-          for (const rule of query.filter) {
+        if ((effectiveQuery as any).filter) {
+          for (const rule of (effectiveQuery as any).filter) {
             if (rule.operator === 'eq') {
               items = items.filter((item) => (item as any)[rule.field] === rule.value)
             }

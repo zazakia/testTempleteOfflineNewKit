@@ -29,7 +29,7 @@ export class CustomerService {
     // Normalize name
     const nameVal = data.name
     if (typeof nameVal === 'string') {
-      data.name = nameVal.trim().replace(/\b\w/g, (c: string) => c.toUpperCase())
+      data.name = nameVal.trim().toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())
     }
 
     // Set default status if not provided

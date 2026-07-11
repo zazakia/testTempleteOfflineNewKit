@@ -1,188 +1,176 @@
 /**
- * ─── Dashboard Page ──────────────────────────────────────────
- * Overview of key metrics and recent activity.
- * Demonstrates reading from the offline DB.
+ * ─── Cooperative Dashboard ───────────────────────────────────
+ * Key performance indicators and quick links for cooperative management.
  */
 
 import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Card, CardHeader, CardContent, cn } from '@repo/ui-core'
-import { customerRepo } from '../lib/db'
+import { Card, CardHeader } from '@repo/ui-core'
+import { memberRepo, loanRepo, checkDbHealth } from '../lib/db'
 import { useOnlineStatus } from '@repo/ui-core'
-import { useSyncStore } from '../store/app'
-import {
-  Users,
-  TrendingUp,
-  Activity,
-  AlertCircle,
-  ArrowRight,
-} from 'lucide-react'
+import { Users, Banknote, ScrollText, Receipt, PiggyBank, RefreshCw, LayoutDashboard } from 'lucide-react'
 
-interface DashboardMetrics {
-  totalCustomers: number
-  activeCustomers: number
-  leadCustomers: number
-  monthlyGrowth: number
+interface DashboardStats {
+  totalMembers: number
+  activeMembers: number
+  totalLoans: number
+  activeLoans: number
+  totalPayments: number
+  dbHealth: { ok: boolean; tableCount: number; totalRecords: number }
 }
 
 export function DashboardPage() {
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    totalCustomers: 0,
-    activeCustomers: 0,
-    leadCustomers: 0,
-    monthlyGrowth: 0,
+  const [stats, setStats] = useState<DashboardStats>({
+    totalMembers: 0, activeMembers: 0,
+    totalLoans: 0, activeLoans: 0, totalPayments: 0,
+    dbHealth: { ok: false, tableCount: 0, totalRecords: 0 },
   })
   const [loading, setLoading] = useState(true)
   const { online } = useOnlineStatus()
-  const { pendingCount, lastSyncAt } = useSyncStore()
 
   useEffect(() => {
-    async function loadMetrics() {
+    async function load() {
       try {
-        const [total, active, leads] = await Promise.all([
-          customerRepo.count({}),
-          customerRepo.count({ filter: [{ field: 'status', operator: 'eq', value: 'active' }] }),
-          customerRepo.count({ filter: [{ field: 'status', operator: 'eq', value: 'lead' }] }),
+        const [memberCount, activeMemberCount, loanCount, activeLoanCount, health] = await Promise.all([
+          memberRepo.count({}),
+          memberRepo.count({ filter: [{ field: 'membershipStatus', operator: 'eq', value: 'active' }] }),
+          loanRepo.count({}),
+          loanRepo.count({ filter: [{ field: 'status', operator: 'eq', value: 'active' }] }),
+          checkDbHealth(),
         ])
-
-        setMetrics({
-          totalCustomers: total,
-          activeCustomers: active,
-          leadCustomers: leads,
-          monthlyGrowth: total > 0 ? Math.round((active / total) * 100) : 0,
+        setStats({
+          totalMembers: memberCount,
+          activeMembers: activeMemberCount,
+          totalLoans: loanCount,
+          activeLoans: activeLoanCount,
+          totalPayments: 0,
+          dbHealth: health,
         })
       } catch (error) {
-        console.error('Failed to load dashboard metrics:', error)
+        console.error('Dashboard load error:', error)
       } finally {
         setLoading(false)
       }
     }
-
-    loadMetrics()
+    load()
   }, [])
 
   const statCards = [
-    {
-      label: 'Total Customers',
-      value: metrics.totalCustomers,
-      icon: Users,
-      color: 'blue',
-      link: '/customers',
-    },
-    {
-      label: 'Active Customers',
-      value: metrics.activeCustomers,
-      icon: TrendingUp,
-      color: 'green',
-      link: '/customers',
-    },
-    {
-      label: 'Leads',
-      value: metrics.leadCustomers,
-      icon: Activity,
-      color: 'yellow',
-      link: '/customers',
-    },
-    {
-      label: 'Activation Rate',
-      value: `${metrics.monthlyGrowth}%`,
-      icon: TrendingUp,
-      color: 'purple',
-      link: '/customers',
-    },
-  ] as const
+    { label: 'Total Members', value: stats.totalMembers, icon: <Users className="h-6 w-6" />, color: 'bg-blue-500', link: '/members' },
+    { label: 'Active Members', value: stats.activeMembers, icon: <Users className="h-6 w-6" />, color: 'bg-green-500', link: '/members' },
+    { label: 'Active Loans', value: stats.activeLoans, icon: <ScrollText className="h-6 w-6" />, color: 'bg-purple-500', link: '/loans' },
+    { label: 'Total Loans', value: stats.totalLoans, icon: <Banknote className="h-6 w-6" />, color: 'bg-yellow-500', link: '/loans' },
+  ]
+
+  const quickLinks = [
+    { label: 'Register Member', icon: <Users className="h-5 w-5" />, path: '/members/new', color: 'text-blue-600' },
+    { label: 'Loan Application', icon: <FileTextIcon />, path: '/loan-applications/new', color: 'text-purple-600' },
+    { label: 'Record Payment', icon: <Receipt className="h-5 w-5" />, path: '/payments', color: 'text-green-600' },
+    { label: 'Journal Entry', icon: <LayoutDashboard className="h-5 w-5" />, path: '/accounting/journal-entries/new', color: 'text-orange-600' },
+  ]
 
   return (
     <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Cooperative Dashboard</h1>
         <p className="mt-1 text-sm text-gray-500">
-          {online ? 'Online' : 'Offline'} · {pendingCount} pending syncs
-          {lastSyncAt && ` · Last sync: ${new Date(lastSyncAt).toLocaleTimeString()}`}
+          {online ? '🟢 Online' : '🔴 Offline'} · {stats.dbHealth.tableCount} tables · {stats.dbHealth.totalRecords} records stored locally
         </p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stat Cards */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (
           <Link key={card.label} to={card.link}>
-            <Card className="transition-shadow hover:shadow-md">
+            <div className="group rounded-xl border border-gray-200 bg-white p-5 transition-all hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">{card.label}</p>
-                  {loading ? (
-                    <div className="mt-1 h-8 w-16 animate-pulse rounded bg-gray-200" />
-                  ) : (
-                    <p className="mt-1 text-2xl font-semibold text-gray-900">
-                      {card.value}
-                    </p>
-                  )}
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
+                    {loading ? <span className="animate-pulse">—</span> : card.value.toLocaleString()}
+                  </p>
                 </div>
-                <div
-                  className={cn(
-                    'rounded-xl p-3',
-                    card.color === 'blue' && 'bg-blue-100 text-blue-600',
-                    card.color === 'green' && 'bg-green-100 text-green-600',
-                    card.color === 'yellow' && 'bg-yellow-100 text-yellow-600',
-                    card.color === 'purple' && 'bg-purple-100 text-purple-600',
-                  )}
-                >
-                  <card.icon className="h-6 w-6" />
+                <div className={`rounded-lg ${card.color} bg-opacity-10 p-3 text-${card.color.split('-')[1]}-600`}>
+                  {card.icon}
                 </div>
               </div>
-            </Card>
+            </div>
           </Link>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader
-          title="Quick Actions"
-          description="Common tasks to get started"
-        />
-        <CardContent>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Link
-              to="/customers/new"
-              className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50"
-            >
-              <Users className="h-5 w-5 text-blue-600" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Add Customer</p>
-                <p className="text-xs text-gray-500">Create a new customer record</p>
+      <div className="mb-8">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Quick Actions</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {quickLinks.map((link) => (
+            <Link key={link.label} to={link.path}>
+              <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-md">
+                <div className={link.color}>{link.icon}</div>
+                <span className="text-sm font-medium text-gray-700">{link.label}</span>
               </div>
-              <ArrowRight className="h-4 w-4 text-gray-400" />
             </Link>
+          ))}
+        </div>
+      </div>
 
-            <Link
-              to="/customers"
-              className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50"
-            >
-              <Activity className="h-5 w-5 text-blue-600" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">View Customers</p>
-                <p className="text-xs text-gray-500">Browse and manage your customers</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-gray-400" />
-            </Link>
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader title="System Health" />
+          <dl className="space-y-2">
+            <HealthItem label="Database" value={stats.dbHealth.ok ? '✅ Connected' : '❌ Error'} />
+            <HealthItem label="Tables" value={String(stats.dbHealth.tableCount)} />
+            <HealthItem label="Total Records" value={stats.dbHealth.totalRecords.toLocaleString()} />
+            <HealthItem label="Sync Status" value={online ? '🟢 Online' : '🔴 Offline'} />
+          </dl>
+        </Card>
 
-            <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-4">
-              <AlertCircle className="h-5 w-5 text-gray-400" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {online ? 'System Online' : 'Working Offline'}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {online
-                    ? 'Changes sync in real-time'
-                    : `${pendingCount} changes queued for sync`}
-                </p>
-              </div>
-            </div>
+        <Card>
+          <CardHeader title="Module Guide" description="Click a module in the sidebar to get started" />
+          <div className="space-y-3">
+            <ModuleGuideItem step="1" title="Members" desc="Register cooperative members with full profiles" status="ready" />
+            <ModuleGuideItem step="2" title="Share Capital" desc="Manage member share subscriptions" status="ready" />
+            <ModuleGuideItem step="3" title="Loan Applications" desc="Accept and process loan applications" status="ready" />
+            <ModuleGuideItem step="4" title="Loan Disbursement" desc="Disburse approved loans" status="ready" />
+            <ModuleGuideItem step="5" title="Collections" desc="Record payments and manage collectors" status="ready" />
+            <ModuleGuideItem step="6" title="Accounting" desc="Chart of accounts and journal entries" status="ready" />
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+function HealthItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <dt className="text-sm text-gray-500">{label}</dt>
+      <dd className="text-sm font-medium text-gray-900">{value}</dd>
+    </div>
+  )
+}
+
+function FileTextIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  )
+}
+
+function ModuleGuideItem({ step, title, desc, status }: { step: string; title: string; desc: string; status: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
+        {step}
+      </div>
+      <div className="flex-1">
+        <p className="text-sm font-medium text-gray-900">{title}</p>
+        <p className="text-xs text-gray-500">{desc}</p>
+      </div>
+      {status === 'ready' && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Ready</span>}
     </div>
   )
 }

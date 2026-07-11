@@ -36,7 +36,21 @@
       "@repo/ui-core": ["./packages/ui-core/src"],
       "@repo/ui-core/*": ["./packages/ui-core/src/*"],
       "@repo/entity-customer": ["./packages/entity-customer/src"],
-      "@repo/entity-customer/*": ["./packages/entity-customer/src/*"]
+      "@repo/entity-customer/*": ["./packages/entity-customer/src/*"],
+      "@repo/entity-member": ["./packages/entity-member/src"],
+      "@repo/entity-member/*": ["./packages/entity-member/src/*"],
+      "@repo/entity-share-capital": ["./packages/entity-share-capital/src"],
+      "@repo/entity-share-capital/*": ["./packages/entity-share-capital/src/*"],
+      "@repo/entity-savings": ["./packages/entity-savings/src"],
+      "@repo/entity-savings/*": ["./packages/entity-savings/src/*"],
+      "@repo/entity-loan": ["./packages/entity-loan/src"],
+      "@repo/entity-loan/*": ["./packages/entity-loan/src/*"],
+      "@repo/entity-accounting": ["./packages/entity-accounting/src"],
+      "@repo/entity-accounting/*": ["./packages/entity-accounting/src/*"],
+      "@repo/entity-collection": ["./packages/entity-collection/src"],
+      "@repo/entity-collection/*": ["./packages/entity-collection/src/*"],
+      "@repo/entity-governance": ["./packages/entity-governance/src"],
+      "@repo/entity-governance/*": ["./packages/entity-governance/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "build", ".turbo"]

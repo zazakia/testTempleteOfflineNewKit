@@ -82,3 +82,25 @@ export function getTenantContext(userId: string, tenantId: string, roles: string
     features: roles.includes('enterprise') ? ['audit', 'export', 'bulk-ops'] : ['basic'],
   }
 }
+
+// ─── Metadata Store & Resolver ──────────────────────────────
+
+export { TenantMetadataStore } from './metadata-store'
+export type { TenantMetadataRepository } from './metadata-store'
+export { MetadataResolver } from './metadata-resolver'
+export type {
+  InterestFormulaConfig,
+  LoanLimitsConfig,
+  SavingsConfig,
+  CustomFieldDef,
+  UIConfig,
+  ApprovalStep,
+  ApprovalWorkflow,
+} from './metadata-resolver'
+export {
+  DEFAULT_INTEREST_FORMULAS,
+  DEFAULT_LOAN_LIMITS,
+  DEFAULT_SAVINGS_CONFIG,
+  DEFAULT_UI_CONFIG,
+  DEFAULT_APPROVAL_WORKFLOW,
+} from './metadata-resolver'

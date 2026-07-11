@@ -6,10 +6,10 @@
 
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider } from '@tanstack/react-router'
 import { ToastProvider } from '@repo/ui-core'
 import { ErrorBoundary } from '@repo/ui-core'
-import { router } from './router'
+import { AuthProvider } from './context/AuthContext'
+import { FeatureFlagProvider } from './context/FeatureFlagContext'
 
 // Create a Query Client with sensible defaults for offline-first
 const queryClient = new QueryClient({
@@ -32,11 +32,15 @@ const queryClient = new QueryClient({
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
-      </QueryClientProvider>
+      <AuthProvider>
+        <FeatureFlagProvider>
+          <QueryClientProvider client={queryClient}>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </QueryClientProvider>
+        </FeatureFlagProvider>
+      </AuthProvider>
     </ErrorBoundary>
   )
 }
