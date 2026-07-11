@@ -4,3 +4,5 @@ export { CreateLoanSchema, CreateLoanApplicationSchema, CreateLoanProductSchema,
 export { LoanService } from './loan.service'
 export { LoanPolicies, LOAN_APPLICATION_POLICIES } from './loan.policies'
 export { LoanHooks } from './loan.hooks'
+export { ApprovalEngine } from './approval-engine'
+export type { ApprovalAction, ApprovalDecision, ApprovalResult } from './approval-engine'

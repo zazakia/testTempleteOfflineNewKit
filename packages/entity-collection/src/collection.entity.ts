@@ -13,7 +13,7 @@ EntityRegistry.register(CollectorEntity)
 
 export const CollectionGroupEntity: EntityDefinition<CollectionGroup> = {
   name: 'collection_group',
-  ui: { label: 'Collection Group', labelPlural: 'Collection Groups', icon: 'Layers', routePath: 'settings/collection-groups', color: 'green', showInNav: false },
+  ui: { label: 'Collection Group', labelPlural: 'Collection Groups', icon: 'Layers', routePath: 'settings/collection-groups', color: 'green', showInNav: false, navGroup: 'Administration' },
   sync: { enabled: true, conflictStrategy: 'lww', priority: 'normal' },
   audit: { enabled: true }, rbac: { enabled: true, permissionPrefix: 'collection' },
   hooks: {}, pagination: 'cursor', tenant: { enabled: true }, softDelete: { enabled: true },
@@ -31,7 +31,7 @@ EntityRegistry.register(RemittanceEntity)
 
 export const AreaEntity: EntityDefinition<Area> = {
   name: 'area',
-  ui: { label: 'Area', labelPlural: 'Areas', icon: 'MapPin', routePath: 'settings/areas', color: 'blue', showInNav: false },
+  ui: { label: 'Area', labelPlural: 'Areas', icon: 'MapPin', routePath: 'areas', color: 'blue', showInNav: false, navGroup: 'Administration' },
   sync: { enabled: true, conflictStrategy: 'lww', priority: 'normal' },
   audit: { enabled: true }, rbac: { enabled: true, permissionPrefix: 'collection' },
   hooks: {}, pagination: 'cursor', tenant: { enabled: true }, softDelete: { enabled: true },

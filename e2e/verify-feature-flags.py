@@ -5,7 +5,7 @@ Tests toggle behavior of feature flags in the running app.
 from playwright.sync_api import sync_playwright
 import sys
 
-BASE = "http://localhost:5174"
+BASE = "http://localhost:5177"
 results = {"pass": 0, "fail": 0}
 
 def check(label, condition, detail=""):

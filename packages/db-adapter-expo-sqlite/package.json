@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@repo/core": "workspace:*",
-    "expo-sqlite": "^14.0.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

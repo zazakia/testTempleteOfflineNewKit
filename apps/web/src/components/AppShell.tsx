@@ -3,7 +3,7 @@
  * Main application layout with sidebar, topbar, and content area.
  */
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { useOnlineStatus } from '@repo/ui-core'
 import {
@@ -29,72 +29,51 @@ import {
   Settings2,
   Building2,
   MapPin,
+  Layers,
+  Globe,
+  Droplets,
+  Truck,
+  UsersRound,
+  Tags,
 } from 'lucide-react'
 import { useSyncStore, useAppStore } from '../store/app'
 import { cn } from '@repo/ui-core'
 import { ToastContainer } from './ToastContainer'
 import { useFeatureFlag, useFlagContext } from '../context/FeatureFlagContext'
+import { useDynamicNav } from '../hooks/useDynamicNav'
+import type { DynamicNavItem } from '../hooks/useDynamicNav'
 
-interface NavItem {
-  label: string
-  icon: React.ReactNode
-  path: string
-  badge?: number
+/** Resolve a Lucide icon string to a component */
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  LayoutDashboard, Users, Banknote, PiggyBank, ScrollText,
+  FileText, Receipt, BookOpen, ListTree, UserCheck,
+  ArrowUpCircle, Landmark, Wallet, BarChart3, Settings2,
+  MapPin, RefreshCw, Building2, Globe, Layers, Tags,
+  Droplets, Truck, UsersRound,
+}
+function NavIcon({ name, className }: { name: string; className?: string }) {
+  const Icon = iconMap[name] ?? Layers
+  return <Icon className={className ?? 'h-5 w-5'} />
 }
 
-const navSections: Array<{ label: string; items: NavItem[] }> = [
-  {
-    label: 'Overview',
-    items: [{ label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" />, path: '/' }],
-  },
-  {
-    label: 'Membership',
-    items: [
-      { label: 'Members', icon: <Users className="h-5 w-5" />, path: '/members' },
-      { label: 'Share Capital', icon: <Banknote className="h-5 w-5" />, path: '/share-capital' },
-      { label: 'Savings', icon: <PiggyBank className="h-5 w-5" />, path: '/savings' },
-    ],
-  },
-  {
-    label: 'Lending',
-    items: [
-      { label: 'Loan Applications', icon: <FileText className="h-5 w-5" />, path: '/loan-applications' },
-      { label: 'Loans', icon: <ScrollText className="h-5 w-5" />, path: '/loans' },
-      { label: 'Payments', icon: <Receipt className="h-5 w-5" />, path: '/payments' },
-    ],
-  },
-  {
-    label: 'Finance',
-    items: [
-      { label: 'Chart of Accounts', icon: <ListTree className="h-5 w-5" />, path: '/accounting/chart-of-accounts' },
-      { label: 'Journal Entries', icon: <BookOpen className="h-5 w-5" />, path: '/accounting/journal-entries' },
-      { label: 'Trial Balance', icon: <BookOpen className="h-5 w-5" />, path: '/accounting/trial-balance' },
-    ],
-  },
-  {
-    label: 'Operations',
-    items: [
-      { label: 'Collectors', icon: <UserCheck className="h-5 w-5" />, path: '/collectors' },
-      { label: 'Remittances', icon: <ArrowUpCircle className="h-5 w-5" />, path: '/remittances' },
-      { label: 'Bank Accounts', icon: <Landmark className="h-5 w-5" />, path: '/bank-accounts' },
-      { label: 'Expenses', icon: <Wallet className="h-5 w-5" />, path: '/expenses' },
-    ],
-  },
+/** Static nav items (not entity-driven) */
+const staticNavSections = [
   {
     label: 'Analytics',
     items: [
-      { label: 'Reports', icon: <BarChart3 className="h-5 w-5" />, path: '/reports' },
+      { label: 'Reports', icon: 'BarChart3', path: '/reports' },
+      { label: 'Trial Balance', icon: 'BookOpen', path: '/accounting/trial-balance' },
     ],
   },
   {
     label: 'Administration',
     items: [
-      { label: 'Settings', icon: <Settings2 className="h-5 w-5" />, path: '/settings' },
-      { label: 'Advanced', icon: <Settings2 className="h-5 w-5" />, path: '/settings/advanced' },
-      { label: 'Computations', icon: <Settings2 className="h-5 w-5" />, path: '/settings/coop-computations' },
-      { label: 'Areas', icon: <MapPin className="h-5 w-5" />, path: '/areas' },
-      { label: 'Pending Approvals', icon: <FileText className="h-5 w-5" />, path: '/pending-approvals' },
-      { label: 'Sync Center', icon: <RefreshCw className="h-5 w-5" />, path: '/sync-center' },
+      { label: 'Settings', icon: 'Settings2', path: '/settings' },
+      { label: 'Advanced', icon: 'Settings2', path: '/settings/advanced' },
+      { label: 'Computations', icon: 'Settings2', path: '/settings/coop-computations' },
+      { label: 'Pending Approvals', icon: 'FileText', path: '/pending-approvals' },
+      { label: 'Governance', icon: 'Building2', path: '/governance' },
+      { label: 'Sync Center', icon: 'RefreshCw', path: '/sync-center' },
     ],
   },
 ]
@@ -110,6 +89,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const showSyncCenter = useFeatureFlag('sync.enabled')
   const showDebugInfo = useFeatureFlag('debug.error-details')
   const flagCtx = useFlagContext()
+
+  // Dynamic navigation from EntityRegistry metadata (merged with static items)
+  const dynamicSections = useDynamicNav()
+  const allSections = useMemo(() => {
+    const merged: Array<{ label: string; items: DynamicNavItem[] }> = dynamicSections.map(s => ({
+      ...s,
+      items: [...s.items],
+    }))
+    for (const staticSec of staticNavSections) {
+      const existing = merged.find(s => s.label === staticSec.label)
+      const staticItems = staticSec.items as DynamicNavItem[]
+      if (existing) {
+        // Deduplicate: only add items not already present
+        for (const item of staticItems) {
+          if (!existing.items.some(i => i.path === item.path)) {
+            existing.items.push(item)
+          }
+        }
+      } else {
+        merged.push({ label: staticSec.label, items: [...staticItems] })
+      }
+    }
+    return merged
+  }, [dynamicSections])
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -146,11 +149,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4">
-          {navSections.map((section) => {
-            // Feature-gate: hide Analytics section if CSV export disabled
+          {allSections.map((section) => {
+            // Feature-gate: hide Analytics if CSV export disabled
             if (section.label === 'Analytics' && !showAnalytics) return null
-            // Feature-gate: hide Sync Center link if sync disabled
-            const filteredItems = section.items.filter((item) => {
+
+            const filteredItems = section.items.filter((item: DynamicNavItem) => {
               if (item.path === '/sync-center' && !showSyncCenter) return false
               return true
             })
@@ -162,11 +165,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {section.label}
                 </p>
                 <ul className="space-y-0.5">
-                  {filteredItems.map((item) => {
+                  {filteredItems.map((item: DynamicNavItem) => {
                     const isActive = item.path === '/'
                       ? location.pathname === '/'
                       : location.pathname.startsWith(item.path)
-
                     return (
                       <li key={item.path}>
                         <Link
@@ -179,7 +181,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           )}
                           onClick={() => setSidebarOpen(false)}
                         >
-                          {item.icon}
+                          <NavIcon name={item.icon} />
                           <span>{item.label}</span>
                           {item.badge != null && item.badge > 0 && (
                             <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">

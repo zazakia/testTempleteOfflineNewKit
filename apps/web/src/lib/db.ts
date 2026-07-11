@@ -7,6 +7,7 @@ import { createDexieRepository, type ContextFactory } from '@repo/db-dexie'
 import { MiddlewarePipeline } from '@repo/core'
 import type { Repository, BaseEntity } from '@repo/core'
 import { createTenantMiddleware, TenantMetadataStore, MetadataResolver } from '@repo/multi-tenant'
+import { createAuditMiddleware, getAuditStore } from '@repo/audit-trail'
 import type { TenantMetadataRepository } from '@repo/multi-tenant'
 import type { TenantMetadata } from '@repo/core'
 import type { Customer } from '@repo/entity-customer'
@@ -58,6 +59,7 @@ const tenantContextFactory: ContextFactory = () => {
 function createRepo<T extends BaseEntity>(entityName: string): Repository<T> {
   const pipeline = new MiddlewarePipeline<BaseEntity>()
   pipeline.use(createTenantMiddleware(entityName))
+  pipeline.use(createAuditMiddleware(entityName))
   return createDexieRepository<T>(entityName, {
     middleware: pipeline,
     contextFactory: tenantContextFactory,
@@ -198,12 +200,17 @@ export const metadataResolver = new MetadataResolver(metadataStore)
 
 // ─── Wire resolver into domain services (metadata-driven customization) ──
 // Each service reads per-tenant config through the resolver at runtime.
-import { LoanService } from '@repo/entity-loan'
+import { LoanService, ApprovalEngine } from '@repo/entity-loan'
 LoanService.configure(metadataResolver)
+
+/** Singleton approval engine — reads workflows from tenant metadata */
+export const approvalEngine = new ApprovalEngine(metadataResolver)
 
 // Expose for testing
 if (typeof window !== 'undefined') {
   ;(window as any).__METADATA__ = metadataStore
+  ;(window as any).__AUDIT__ = getAuditStore()
+  ;(window as any).__APPROVAL__ = approvalEngine
 }
 
 // ─── Database Health ─────────────────────────────────────────

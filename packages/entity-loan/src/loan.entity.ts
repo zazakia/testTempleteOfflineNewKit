@@ -17,7 +17,7 @@ EntityRegistry.register(LoanEntity)
 
 export const LoanProductEntity: EntityDefinition<LoanProduct> = {
   name: 'loan_product',
-  ui: { label: 'Loan Product', labelPlural: 'Loan Products', icon: 'Tags', routePath: 'loan-products', color: 'blue', showInNav: false },
+  ui: { label: 'Loan Product', labelPlural: 'Loan Products', icon: 'Tags', routePath: 'settings/loan-products', color: 'blue', showInNav: false, navGroup: 'Administration' },
   sync: { enabled: true, conflictStrategy: 'lww', priority: 'normal' },
   audit: { enabled: true }, rbac: { enabled: true, permissionPrefix: 'loan_product' },
   hooks: {}, pagination: 'offset', tenant: { enabled: true }, softDelete: { enabled: true },

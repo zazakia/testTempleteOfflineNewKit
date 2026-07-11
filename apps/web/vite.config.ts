@@ -64,6 +64,12 @@ export default defineConfig({
       '@repo/entity-accounting': path.resolve(__dirname, '../../packages/entity-accounting/src'),
       '@repo/entity-collection': path.resolve(__dirname, '../../packages/entity-collection/src'),
       '@repo/entity-governance': path.resolve(__dirname, '../../packages/entity-governance/src'),
+      '@repo/entity-water-station': path.resolve(__dirname, '../../packages/entity-water-station/src'),
+      '@repo/multi-tenant': path.resolve(__dirname, '../../packages/multi-tenant/src'),
+      '@repo/feature-flags': path.resolve(__dirname, '../../packages/feature-flags/src'),
+      '@repo/audit-trail': path.resolve(__dirname, '../../packages/audit-trail/src'),
+      '@repo/sync-engine': path.resolve(__dirname, '../../packages/sync-engine/src'),
+      '@repo/observability': path.resolve(__dirname, '../../packages/observability/src'),
     },
   },
   server: {
@@ -74,10 +80,31 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', '@tanstack/react-router', '@tanstack/react-query'],
-          ui: ['lucide-react', 'react-hook-form', '@hookform/resolvers'],
-          core: ['@repo/core', '@repo/db-dexie', '@repo/entity-customer'],
+        manualChunks(id: string) {
+          // Vendor: big frameworks
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) return 'vendor-react'
+          if (id.includes('node_modules/@tanstack')) return 'vendor-tanstack'
+          if (id.includes('node_modules/lucide-react')) return 'vendor-icons'
+          if (id.includes('node_modules/zustand')) return 'vendor-state'
+          if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform')) return 'vendor-forms'
+          if (id.includes('node_modules/zod')) return 'vendor-validation'
+          if (id.includes('node_modules/dexie') || id.includes('node_modules/uuid')) return 'vendor-db'
+
+          // Package-based: split entity packages
+          if (id.includes('packages/entity-')) return `entity-${id.split('entity-')[1]?.split('/')[0]}`
+          if (id.includes('packages/core')) return 'pkg-core'
+          if (id.includes('packages/db-adapter')) return 'pkg-db'
+          if (id.includes('packages/ui-core')) return 'pkg-ui'
+          if (id.includes('packages/multi-tenant')) return 'pkg-tenant'
+          if (id.includes('packages/feature-flags')) return 'pkg-flags'
+          if (id.includes('packages/audit-trail')) return 'pkg-audit'
+
+          // Route-based: split large pages
+          if (id.includes('routes/reports')) return 'page-reports'
+          if (id.includes('routes/loans') || id.includes('routes/loan-')) return 'page-loans'
+          if (id.includes('routes/members') || id.includes('routes/member')) return 'page-members'
+          if (id.includes('routes/accounting')) return 'page-accounting'
+          if (id.includes('routes/portal')) return 'page-portals'
         },
       },
     },

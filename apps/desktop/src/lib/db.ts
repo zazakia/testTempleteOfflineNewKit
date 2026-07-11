@@ -1,13 +1,10 @@
 /**
- * ─── Mobile Database Setup (Expo SQLite) ─────────────────────
- * Metadata-driven framework wired for React Native / Expo.
- * Same architecture as apps/web/src/lib/db.ts but using expo-sqlite adapter.
- *
- * Tenant isolation, feature flags, audit trail, metadata store —
- * all active on mobile, with local SQLite as primary store.
+ * ─── Desktop Database Setup (Tauri SQL) ──────────────────────
+ * Metadata-driven framework wired for Tauri desktop app.
+ * Same architecture as apps/web/src/lib/db.ts but using tauri-sql adapter.
  */
 
-import { createExpoSqliteRepository } from '@repo/db-expo-sqlite'
+import { createTauriSqlRepository } from '@repo/db-tauri-sql'
 import { MiddlewarePipeline } from '@repo/core'
 import type { Repository, BaseEntity } from '@repo/core'
 import { createTenantMiddleware, TenantMetadataStore, MetadataResolver } from '@repo/multi-tenant'
@@ -19,7 +16,6 @@ import type { Customer } from '@repo/entity-customer'
 import type { Member } from '@repo/entity-member'
 import type { Loan, LoanProduct, LoanApplication, Payment } from '@repo/entity-loan'
 
-// Register entity packages (self-registers with EntityRegistry)
 import '@repo/entity-customer'
 import '@repo/entity-member'
 import '@repo/entity-loan'
@@ -28,28 +24,19 @@ import '@repo/entity-share-capital'
 import '@repo/entity-accounting'
 import '@repo/entity-collection'
 import '@repo/entity-governance'
-import '@repo/entity-water-station'
-
-// ─── Tenant Context (from auth/session in real app) ──────────
 
 const tenantContextFactory = () => ({
-  userId: 'mobile-user',
+  userId: 'desktop-user',
   tenantId: 'default',
   timestamp: Date.now(),
 })
-
-// ─── Repository Factory (tenant + audit middleware) ──────────
 
 function createRepo<T extends BaseEntity>(entityName: string): Repository<T> {
   const pipeline = new MiddlewarePipeline<BaseEntity>()
   pipeline.use(createTenantMiddleware(entityName))
   pipeline.use(createAuditMiddleware(entityName))
-  return createExpoSqliteRepository<T>(entityName, {})
-  // Note: expo-sqlite adapter doesn't support middleware pipeline yet.
-  // When implemented, pass { middleware: pipeline, contextFactory: tenantContextFactory }
+  return createTauriSqlRepository<T>(entityName, {})
 }
-
-// ─── Repositories ────────────────────────────────────────────
 
 export const customerRepo = createRepo<Customer>('customer')
 export const memberRepo = createRepo<Member>('members')
@@ -58,18 +45,14 @@ export const loanProductRepo = createRepo<LoanProduct>('loan_products')
 export const loanApplicationRepo = createRepo<LoanApplication>('loan_applications')
 export const paymentRepo = createRepo<Payment>('payments')
 
-// ─── Metadata Store (SQLite-backed — implemented via expo-sqlite) ──
-
 function createMetadataRepo(): TenantMetadataRepository {
   return {
     async get(tenantId: string): Promise<TenantMetadata | undefined> {
-      // TODO: implement via expo-sqlite
-      // const db = await openDatabaseAsync('cooperp.db')
-      // const row = await db.getFirstAsync('SELECT * FROM tenant_metadata WHERE tenantId = ?', tenantId)
+      // TODO: implement via tauri-plugin-sql
       return undefined
     },
     async put(record: TenantMetadata): Promise<void> {
-      // TODO: implement via expo-sqlite
+      // TODO: implement via tauri-plugin-sql
     },
   }
 }
@@ -77,6 +60,4 @@ function createMetadataRepo(): TenantMetadataRepository {
 export const metadataStore = new TenantMetadataStore(createMetadataRepo())
 export const metadataResolver = new MetadataResolver(metadataStore)
 export const approvalEngine = new ApprovalEngine(metadataResolver)
-
-// Wire service
 LoanService.configure(metadataResolver)

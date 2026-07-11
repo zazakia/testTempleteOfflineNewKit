@@ -28,18 +28,19 @@ export const CustomerEntity: EntityDefinition<Customer> = {
     color: 'blue',
     showInNav: true,
     navOrder: 10,
+    navGroup: 'CRM',
   },
 
   sync: {
     enabled: true,
     conflictStrategy: 'lww',
     priority: 'normal',
-    excludeFields: ['notes'], // Notes are local-only to avoid sync conflicts
+    excludeFields: ['notes'],
   },
 
   audit: {
     enabled: true,
-    excludeFields: ['version'], // Version changes are noise
+    excludeFields: ['version'],
   },
 
   rbac: {

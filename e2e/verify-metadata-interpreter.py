@@ -5,7 +5,7 @@ Tests that per-tenant metadata drives business logic at runtime.
 from playwright.sync_api import sync_playwright
 import sys, math
 
-BASE = "http://localhost:5174"
+BASE = "http://localhost:5177"
 results = {"pass": 0, "fail": 0}
 
 def check(label, condition, detail=""):

@@ -31,6 +31,8 @@ export interface EntityUIConfig {
   showInNav?: boolean
   /** Order in navigation (lower = first) */
   navOrder?: number
+  /** Navigation group (e.g., 'Membership', 'Lending', 'Finance') */
+  navGroup?: string
 }
 
 /**
