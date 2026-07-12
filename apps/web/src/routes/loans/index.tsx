@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Card, CardHeader, Badge, Button, Input } from '@repo/ui-core'
 import { loanRepo } from '../../lib/db'
+import { buildLookups } from '../../lib/lookups'
 import type { Loan } from '@repo/entity-loan'
 import { LOAN_STATUS_LABELS, LOAN_STATUS_COLORS, LoanService } from '@repo/entity-loan'
 import { Plus, Search, ChevronLeft, ChevronRight, ScrollText, AlertTriangle } from 'lucide-react'
@@ -25,6 +26,8 @@ export function LoanListPage() {
 
   // Portfolio KPIs
   const [kpis, setKpis] = useState({ totalPortfolio: 0, activeLoans: 0, delinquentLoans: 0, totalDelinquent: 0 })
+  // Human-readable name lookups
+  const [lookups, setLookups] = useState<Awaited<ReturnType<typeof buildLookups>> | null>(null)
 
   const loadLoans = useCallback(async () => {
     setLoading(true)
@@ -64,6 +67,7 @@ export function LoanListPage() {
 
   useEffect(() => { loadLoans() }, [loadLoans])
   useEffect(() => { setPage(1) }, [search, statusFilter])
+  useEffect(() => { buildLookups().then(setLookups) }, [])
 
   const parRate = kpis.totalPortfolio > 0 ? ((kpis.totalDelinquent / kpis.totalPortfolio) * 100).toFixed(1) : '0.0'
 
@@ -152,7 +156,7 @@ export function LoanListPage() {
                 <tr key={loan.id} className="cursor-pointer transition-colors hover:bg-gray-50"
                   onClick={() => navigate({ to: '/loans/$id', params: { id: loan.id } })}>
                   <td className="whitespace-nowrap px-4 py-3 text-sm font-mono text-gray-900">{loan.loanNumber}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{loan.borrowerId}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{lookups?.resolveBorrower(loan.borrowerId) ?? loan.borrowerId}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-900">₱{loan.principalAmount?.toLocaleString()}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">₱{loan.installmentAmount?.toLocaleString()}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-center">

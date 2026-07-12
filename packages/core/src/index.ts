@@ -37,6 +37,7 @@ export { EntityRegistry } from './entity/registry'
 export type { EntityDefinition, EntityUIConfig, EntitySyncConfig, EntityHooks, HookContext } from './entity/registry'
 
 // Validation
+export { extractFieldsFromSchema } from './validation/field-extractor'
 export {
   entityIdSchema,
   timestampSchema,
@@ -59,3 +60,6 @@ export type { Middleware, MiddlewareContext } from './middleware/pipeline'
 // Events
 export { eventBus } from './event/bus'
 export type { DomainEvent, DomainEventType, EventHandler, EventSubscription } from './event/bus'
+
+// i18n
+export { t, setLocale, getLocale } from './i18n'

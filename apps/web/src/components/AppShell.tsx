@@ -78,7 +78,7 @@ const staticNavSections = [
   },
 ]
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export const AppShell = React.memo(function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const { online } = useOnlineStatus()
   const { pendingCount } = useSyncStore()
@@ -130,6 +130,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-white border-r border-gray-200 transition-transform duration-300 lg:relative lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
+        role="navigation"
+        aria-label="Main navigation"
       >
         {/* Logo */}
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
@@ -220,14 +222,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <main className="flex flex-1 flex-col overflow-hidden">
+      <main className="flex flex-1 flex-col overflow-hidden" role="main" aria-label="Page content">
         {/* Top bar */}
         <header className="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-6">
           <button
             onClick={() => setSidebarOpen(true)}
             className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 lg:hidden"
+            aria-label="Open navigation menu"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
           {!online && (
             <div className="flex items-center gap-2 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800">
@@ -258,4 +261,4 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
     </div>
   )
-}
+})

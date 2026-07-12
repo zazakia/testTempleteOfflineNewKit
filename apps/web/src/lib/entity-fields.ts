@@ -9,6 +9,31 @@
  */
 
 import type { FieldDef } from '../components/GenericForm'
+import { extractFieldsFromSchema } from '@repo/core'
+
+/** Get form fields for an entity, combining schema extraction + metadata overrides */
+export function getEntityFormFields(entityName: string): FieldDef[] {
+  // Try to extract from Zod schema first (metadata-driven)
+  try {
+    const schema = getEntitySchema(entityName)
+    if (schema) return extractFieldsFromSchema(schema)
+  } catch {
+    // Schema not available — fall back to hardcoded fields
+  }
+  // Fallback: use hardcoded field definitions
+  return ENTITY_FIELDS[entityName] ?? [
+    { name: 'name', label: 'Name', type: 'text', required: true },
+    { name: 'description', label: 'Description', type: 'textarea' },
+  ]
+}
+
+/** Dynamically import entity Zod schema */
+function getEntitySchema(entityName: string): any {
+  // This is a bridge — in production, each entity package would export
+  // a getFormFields() that calls extractFieldsFromSchema with its schema.
+  // For now, we use the hardcoded ENTITY_FIELDS which are already comprehensive.
+  return null
+}
 
 /** Standard fields per entity (drives form generation) */
 export const ENTITY_FIELDS: Record<string, FieldDef[]> = {

@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { Card, CardHeader, Badge, Button, Input, Modal } from '@repo/ui-core'
 import { paymentRepo, loanRepo } from '../../lib/db'
+import { buildLookups } from '../../lib/lookups'
 import type { Payment } from '@repo/entity-loan'
 import { Plus, Search, ChevronLeft, ChevronRight, Save, Receipt } from 'lucide-react'
 
@@ -20,6 +21,8 @@ export function PaymentListPage() {
   const [showModal, setShowModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ loanId: '', amount: 0, paymentDate: Date.now(), receiptNumber: '' })
+  const [lookups, setLookups] = useState<Awaited<ReturnType<typeof buildLookups>> | null>(null)
+  useEffect(() => { buildLookups().then(setLookups) }, [])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
@@ -100,7 +103,7 @@ export function PaymentListPage() {
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{new Date(p.paymentDate).toLocaleDateString()}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm font-mono text-gray-900">{p.loanId?.slice(0, 8)}...</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{p.borrowerId || '—'}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{lookups?.resolveBorrower(p.borrowerId) || p.borrowerId || '—'}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-900">₱{p.amount.toLocaleString()}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-500">{p.paymentType}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-400">{p.receiptNumber || '—'}</td>

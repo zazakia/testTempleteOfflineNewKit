@@ -6,7 +6,7 @@ driven by tenant metadata (not hardcoded logic).
 from playwright.sync_api import sync_playwright
 import sys
 
-BASE = "http://localhost:5177"
+BASE = "http://localhost:5178"
 results = {"pass": 0, "fail": 0}
 
 def check(label, condition, detail=""):

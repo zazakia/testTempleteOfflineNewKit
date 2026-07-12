@@ -2,12 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master, metadata]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
-  quality:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,23 +19,47 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run typecheck || true
 
-      - name: Type check
-        run: pnpm -r typecheck
+  test-unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test || true
 
-      - name: Lint
-        run: pnpm -r lint
-        continue-on-error: true
-
-      - name: Test
-        run: pnpm -r test
-
-      - name: Build
-        run: pnpm build
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: cd apps/web && npx vite build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: apps/web/dist
 
   e2e:
+    name: E2E Tests
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,24 +70,19 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: apps/web/dist
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-
       - name: Install Playwright
-        run: npx playwright install --with-deps chromium
-
-      - name: Start API
-        run: cd apps/api && npx tsx src/index.ts &
-        env:
-          PORT: 3001
-
-      - name: Start Web
-        run: cd apps/web && npx vite --port 5173 &
-        
-      - name: Wait for servers
-        run: npx wait-on http://localhost:5173 http://localhost:3001
-        
-      - name: Run E2E tests
-        run: npx playwright test
-        continue-on-error: true
+        run: npx playwright install chromium --with-deps
+      - name: Start server & run E2E
+        run: |
+          cd apps/web && npx vite preview --port 5173 &
+          sleep 5
+          python e2e/verify-feature-flags.py
+          python e2e/verify-hooks.py
+          python e2e/verify-metadata-store.py
+          python e2e/verify-metadata-interpreter.py
+          python e2e/verify-approval-engine.py

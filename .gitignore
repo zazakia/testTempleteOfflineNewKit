@@ -25,4 +25,8 @@ Thumbs.db
 # Local Netlify folder
 .netlify
 
+# Allow .env.example (block .env)
+.env
+!.env.example
+
 .vercel

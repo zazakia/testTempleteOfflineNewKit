@@ -24,6 +24,9 @@ export {
   CUSTOMER_STATUS_COLORS,
 } from './customer.schema'
 
+// Form field extraction (metadata-driven: reads from Zod schema)
+export { getCustomerFormFields } from './customer.form-fields'
+
 // Service
 export { CustomerService } from './customer.service'
 

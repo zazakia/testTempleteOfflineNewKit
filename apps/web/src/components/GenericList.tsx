@@ -37,6 +37,8 @@ interface GenericListProps {
   onRowClick?: (id: string) => void
   title?: string
   pageSize?: number
+  /** Optional: ID-to-name lookups for human-readable display */
+  lookups?: { resolveMember: (id: string) => string; resolveBorrower: (id: string) => string; resolveCollector: (id: string) => string; resolveAccount: (code: string) => string; resolveLoan: (id: string) => string }
 }
 
 // ─── Default Column Inference ───────────────────────────────
@@ -126,19 +128,24 @@ function inferColumns(entityName: string): ColumnDef[] {
 
 // ─── Helpers ────────────────────────────────────────────────
 
-function formatCell(value: unknown): string {
+function formatCell(value: unknown, colKey?: string, lookups?: GenericListProps['lookups']): string {
   if (value == null) return '—'
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   if (typeof value === 'number') {
+    if (value > 1e12) return new Date(value).toLocaleDateString()
     if (value > 999999) return value.toLocaleString()
     if (Number.isInteger(value)) return String(value)
     return value.toFixed(2)
   }
-  // Date timestamps
-  if (typeof value === 'number' && value > 1e12) {
-    return new Date(value).toLocaleDateString()
+  const str = String(value)
+  // Resolve IDs to human-readable names using lookups
+  if (lookups && colKey) {
+    if (colKey === 'borrowerId' || colKey === 'memberId') return lookups.resolveBorrower(str)
+    if (colKey === 'collectorId') return lookups.resolveCollector(str)
+    if (colKey === 'loanId') return lookups.resolveLoan(str)
+    if (colKey === 'accountId' || colKey === 'accountCode') return lookups.resolveAccount(str)
   }
-  return String(value)
+  return str
 }
 
 // ─── Component ──────────────────────────────────────────────
@@ -245,7 +252,7 @@ export function GenericList({
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full" role="table" aria-label={`${entityLabel} list`}>
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
               {columns.map(col => (
@@ -299,7 +306,7 @@ export function GenericList({
                     <td key={col.key} className="px-4 py-3 text-sm text-gray-700">
                       {col.render
                         ? col.render(item[col.key], item)
-                        : formatCell(item[col.key])}
+                        : formatCell(item[col.key], col.key, lookups)}
                     </td>
                   ))}
                 </tr>
