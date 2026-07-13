@@ -131,6 +131,25 @@ class OfflineDatabase extends Dexie {
       tenant_metadata: 'tenantId',
     })
 
+    // ─── v3: Clinic Management System ────────────────────
+    // Added 2026-07: Clinic module for medical/healthcare clients
+    this.version(3).stores({
+      // Patients
+      clinic_patients: 'id, tenantId, patientCode, firstName, lastName, fullName, sex, dateOfBirth, bloodType, phone, email, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+status], [patientCode]',
+
+      // Doctors
+      clinic_doctors: 'id, tenantId, doctorCode, firstName, lastName, fullName, specialization, licenseNumber, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+status]',
+
+      // Appointments — critical for scheduling
+      clinic_appointments: 'id, tenantId, appointmentCode, patientId, doctorId, appointmentDate, appointmentTime, appointmentType, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [patientId+appointmentDate], [doctorId+appointmentDate], [tenantId+appointmentDate], [status+appointmentDate]',
+
+      // SOAP Consultation Records
+      clinic_consultation_records: 'id, tenantId, recordCode, appointmentId, patientId, doctorId, visitDate, diagnosisCode, createdAt, updatedAt, deletedAt, [patientId], [doctorId+visitDate], [appointmentId]',
+
+      // Billing
+      clinic_billing: 'id, tenantId, billingCode, appointmentId, patientId, doctorId, billingDate, status, totalAmount, amountPaid, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [patientId], [status+billingDate], [billingCode]',
+    })
+
     this.changeLog = this.table('changeLog')
   }
 }

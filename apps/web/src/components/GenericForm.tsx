@@ -21,18 +21,8 @@ import { Card, CardHeader, cn } from '@repo/ui-core'
 import { Save, X } from 'lucide-react'
 import type { CustomFieldDef } from '@repo/multi-tenant'
 
-// ─── Types ──────────────────────────────────────────────────
-
-export interface FieldDef {
-  name: string
-  label: string
-  type: 'text' | 'number' | 'email' | 'phone' | 'date' | 'select' | 'textarea' | 'boolean'
-  required?: boolean
-  placeholder?: string
-  options?: Array<{ label: string; value: string }>
-  defaultValue?: unknown
-  readOnly?: boolean
-}
+import type { FieldDef } from '@repo/core'
+export type { FieldDef }
 
 interface GenericFormProps {
   entityName: string

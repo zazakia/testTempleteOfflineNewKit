@@ -160,4 +160,12 @@ featureFlags.defineMany([
     enabled: true,
     rules: [{ target: 'environment', environments: ['development'] }],
   },
+  {
+    key: 'module.clinic',
+    description: 'Enable Clinic Management System (patients, doctors, appointments, billing)',
+    enabled: true,
+    default: true,
+    // To restrict to specific clinic tenants only:
+    // rules: [{ target: 'tenant', values: ['clinic-tenant-id-1', 'clinic-tenant-id-2'] }],
+  },
 ])

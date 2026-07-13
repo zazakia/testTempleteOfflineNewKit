@@ -126,7 +126,7 @@ interface PageErrorBoundaryState {
  * Catches render errors in individual page components.
  */
 export class PageErrorBoundary extends React.Component<PageErrorBoundaryProps, PageErrorBoundaryState> {
-  state: PageErrorBoundaryState = { error: null }
+  override state: PageErrorBoundaryState = { error: null }
 
   static getDerivedStateFromError(error: Error) {
     return { error }
@@ -136,7 +136,7 @@ export class PageErrorBoundary extends React.Component<PageErrorBoundaryProps, P
     this.setState({ error: null })
   }
 
-  render() {
+  override render() {
     if (this.state.error) {
       return this.props.fallback ?? (
         <ErrorFallback error={this.state.error} onRetry={this.handleRetry} />

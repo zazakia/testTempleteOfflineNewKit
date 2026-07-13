@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useOnlineStatus } from '@repo/ui-core'
 import {
   LayoutDashboard,
@@ -35,9 +35,11 @@ import {
   Truck,
   UsersRound,
   Tags,
+  LogOut,
 } from 'lucide-react'
 import { useSyncStore, useAppStore } from '../store/app'
-import { cn } from '@repo/ui-core'
+import { cn, Button } from '@repo/ui-core'
+import { useAuth } from '../context/AuthContext'
 import { ToastContainer } from './ToastContainer'
 import { useFeatureFlag, useFlagContext } from '../context/FeatureFlagContext'
 import { useDynamicNav } from '../hooks/useDynamicNav'
@@ -83,6 +85,8 @@ export const AppShell = React.memo(function AppShell({ children }: { children: R
   const { online } = useOnlineStatus()
   const { pendingCount } = useSyncStore()
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   // Feature flags — evaluated reactively per user/tenant/env
   const showAnalytics = useFeatureFlag('export.csv')
@@ -244,6 +248,24 @@ export const AppShell = React.memo(function AppShell({ children }: { children: R
               Syncing ({pendingCount})
             </div>
           )}
+          <div className="ml-auto flex items-center gap-4">
+            {user && (
+              <>
+                <span className="text-sm font-medium text-gray-700">{user.fullName}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    logout()
+                    navigate({ to: '/login' })
+                  }}
+                  icon={<LogOut className="h-4 w-4" />}
+                >
+                  Sign Out
+                </Button>
+              </>
+            )}
+          </div>
         </header>
 
         {/* Debug: feature flag status (only in dev) */}

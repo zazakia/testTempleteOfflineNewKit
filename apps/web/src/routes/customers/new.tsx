@@ -103,6 +103,7 @@ export function CreateCustomerPage() {
             <div>
               <Input
                 label="Full Name"
+                name="name"
                 required
                 placeholder="John Doe"
                 value={formData.name}
@@ -114,6 +115,7 @@ export function CreateCustomerPage() {
             <div>
               <Input
                 label="Email"
+                name="email"
                 required
                 type="email"
                 placeholder="john@company.com"
@@ -126,6 +128,7 @@ export function CreateCustomerPage() {
             <div>
               <Input
                 label="Phone"
+                name="phone"
                 type="tel"
                 placeholder="+1 555-0123"
                 value={formData.phone}
@@ -137,6 +140,7 @@ export function CreateCustomerPage() {
             <div>
               <Input
                 label="Company"
+                name="company"
                 placeholder="Acme Inc."
                 value={formData.company}
                 onChange={(e) => setFormData((f) => ({ ...f, company: e.target.value }))}
@@ -147,6 +151,7 @@ export function CreateCustomerPage() {
             <div className="sm:col-span-2">
               <Input
                 label="Website"
+                name="website"
                 type="url"
                 placeholder="https://acme.com"
                 value={formData.website}
@@ -174,6 +179,7 @@ export function CreateCustomerPage() {
             <div>
               <Input
                 label="Tags"
+                name="tags"
                 placeholder="vip, enterprise, support (comma-separated)"
                 value={formData.tags}
                 onChange={(e) => setFormData((f) => ({ ...f, tags: e.target.value }))}

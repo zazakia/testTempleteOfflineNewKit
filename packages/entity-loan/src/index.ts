@@ -2,7 +2,7 @@ export { LoanEntity, LoanProductEntity, LoanApplicationEntity, PaymentEntity } f
 export type { Loan, LoanProduct, LoanApplication, Payment, PaymentSchedule, LoanPenalty, Guarantor, LoanStatus, LoanApplicationStatus, LoanType, InterestType, Frequency, PaymentType, TermUnit } from './loan.schema'
 export { CreateLoanSchema, CreateLoanApplicationSchema, CreateLoanProductSchema, CreatePaymentSchema, LoanQuerySchema, LoanApplicationQuerySchema, LoanStatusSchema, LOAN_STATUS_LABELS, LOAN_STATUS_COLORS, LOAN_APPLICATION_STATUS_LABELS, FREQUENCY_LABELS, AGING_BUCKET_LABELS, InterestTypeSchema, FrequencySchema, TermUnitSchema } from './loan.schema'
 export { LoanService } from './loan.service'
-export { LoanPolicies, LOAN_APPLICATION_POLICIES } from './loan.policies'
+export { LoanPolicies, LOAN_APPLICATION_POLICIES, evaluatePolicies } from './loan.policies'
 export { LoanHooks } from './loan.hooks'
 export { ApprovalEngine } from './approval-engine'
 export type { ApprovalAction, ApprovalDecision, ApprovalResult } from './approval-engine'

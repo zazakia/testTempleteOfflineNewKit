@@ -8,7 +8,16 @@
  */
 
 import { z } from 'zod'
-import type { FieldDef } from '../components/GenericForm'
+export interface FieldDef {
+  name: string
+  label: string
+  type: 'text' | 'number' | 'email' | 'phone' | 'date' | 'select' | 'textarea' | 'boolean'
+  required?: boolean
+  placeholder?: string
+  options?: Array<{ label: string; value: string }>
+  defaultValue?: unknown
+  readOnly?: boolean
+}
 
 /**
  * Extract FieldDef[] from a Zod object schema.

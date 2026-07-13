@@ -53,6 +53,7 @@ const ROUTE_TO_GROUP: Record<string, string> = {
   '/payroll': 'Administration',
   '/portal': 'Portals',
   '/water-station': 'Water Station',
+  '/clinic': 'Clinic',
 }
 
 /** Static nav items that aren't entity-driven */

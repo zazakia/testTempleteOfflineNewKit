@@ -93,7 +93,8 @@ export class ApprovalEngine {
     // Find current step
     const currentStepIndex = existingDecisions.length
 
-    if (currentStepIndex >= workflow.steps.length) {
+    const currentStep = workflow.steps[currentStepIndex]
+    if (!currentStep) {
       return {
         status: 'approved',
         currentStep: workflow.steps.length,
@@ -101,8 +102,6 @@ export class ApprovalEngine {
         decisions: existingDecisions,
       }
     }
-
-    const currentStep = workflow.steps[currentStepIndex]
 
     // Allow rejection at any step
     if (action.action === 'reject') {
@@ -157,10 +156,10 @@ export class ApprovalEngine {
       const allDecisions = [...existingDecisions, skipDecision]
       // Check if there are more steps
       const nextIdx = currentStepIndex + 1
-      if (nextIdx >= workflow.steps.length) {
+      const nextStep = workflow.steps[nextIdx]
+      if (!nextStep) {
         return { status: 'approved', currentStep: workflow.steps.length, totalSteps: workflow.steps.length, decisions: allDecisions }
       }
-      const nextStep = workflow.steps[nextIdx]
       return {
         status: 'in_progress', currentStep: nextIdx, totalSteps: workflow.steps.length,
         decisions: allDecisions,
@@ -179,26 +178,16 @@ export class ApprovalEngine {
       stepAction: currentStep.action,
       decidedBy: action.performedBy.userId,
       decidedAt: Date.now(),
-      decision: action.action === 'reject' ? 'rejected' : 'approved',
+      decision: 'approved',
       notes: action.notes,
     }
 
     await this.decisions.add(decision)
 
-    if (action.action === 'reject') {
-      return {
-        status: 'rejected',
-        currentStep: currentStepIndex + 1,
-        totalSteps: workflow.steps.length,
-        decisions: [...existingDecisions, decision],
-      }
-    }
-
     // Move to next step, auto-skipping threshold steps if amount below min
     const allDecisions = [...existingDecisions, decision]
     return this.advanceWorkflow(tenantId, module, entityId, workflow, allDecisions, action.amount ?? 0)
   }
-
   /** Advance through remaining steps, auto-skipping threshold-gated steps */
   private async advanceWorkflow(
     tenantId: string, module: string, entityId: string,
@@ -210,17 +199,22 @@ export class ApprovalEngine {
 
     while (idx < workflow.steps.length) {
       const step = workflow.steps[idx]
+      if (!step) {
+        idx++
+        continue
+      }
       // Auto-skip if amount below threshold
       if (step.minAmount != null && amount < step.minAmount) {
-        allDecisions.push({
+        const skipDec: ApprovalDecision = {
           id: `dec-skip-${entityId}-${idx}-${Date.now()}`,
           tenantId, module, entityId,
           stepIndex: idx, stepRole: step.role, stepAction: step.action,
           decidedBy: 'system', decidedAt: Date.now(),
           decision: 'approved',
           notes: 'Auto-skipped (amount below threshold)',
-        })
-        await this.decisions.add(allDecisions[allDecisions.length - 1])
+        }
+        allDecisions.push(skipDec)
+        await this.decisions.add(skipDec)
         idx++
         continue
       }
@@ -253,6 +247,9 @@ export class ApprovalEngine {
     }
 
     const lastDecision = decisions[decisions.length - 1]
+    if (!lastDecision) {
+      return { status: 'pending', currentStep: 0, totalSteps: workflow.steps.length, decisions: [] }
+    }
     if (lastDecision.decision === 'rejected') {
       return { status: 'rejected', currentStep: decisions.length, totalSteps: workflow.steps.length, decisions }
     }
@@ -262,6 +259,9 @@ export class ApprovalEngine {
     }
 
     const nextStep = workflow.steps[decisions.length]
+    if (!nextStep) {
+      return { status: 'approved', currentStep: workflow.steps.length, totalSteps: workflow.steps.length, decisions }
+    }
     return {
       status: 'in_progress',
       currentStep: decisions.length,

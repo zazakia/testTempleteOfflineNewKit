@@ -15,6 +15,7 @@ import { DashboardPage } from './routes/index'
 // Legacy Customer routes
 import { CustomerListPage } from './routes/customers/index'
 import { CustomerDetailPage } from './routes/customers/$id'
+import { CreateCustomerPage } from './routes/customers/new'
 
 // Member routes
 import { MemberListPage } from './routes/members/index'
@@ -57,6 +58,13 @@ import { EncoderPortal } from './routes/portal/encoder/index'
 import { PromissoryNotePage } from './routes/loans/promissory-note'
 const WsCustomersPage = lazy(() => import('./routes/water-station/customers').then(m => ({ default: m.WsCustomersPage })))
 const WsDeliveriesPage = lazy(() => import('./routes/water-station/deliveries').then(m => ({ default: m.WsDeliveriesPage })))
+
+// Clinic Management System
+import { ClinicPatientsPage } from './routes/clinic/patients/index'
+import { ClinicNewPatientPage } from './routes/clinic/patients/new'
+import { ClinicPatientDetailPage } from './routes/clinic/patients/$id'
+import { ClinicAppointmentsPage } from './routes/clinic/appointments/index'
+import { ClinicBillingPage } from './routes/clinic/billing/index'
 import { PayrollPage } from './routes/payroll/index'
 import { GovernancePage } from './routes/governance/index'
 import { CashOnHandPage } from './routes/cash-on-hand/index'
@@ -248,6 +256,12 @@ const customersIndexRoute = createRoute({
   component: CustomerListPage,
 })
 
+const customersNewRoute = createRoute({
+  getParentRoute: () => customersRoute,
+  path: 'new',
+  component: CreateCustomerPage,
+})
+
 const customerDetailRoute = createRoute({
   getParentRoute: () => customersRoute,
   path: '$id',
@@ -345,7 +359,25 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: 'portal/borrower/transactions', component: BorrowerTransactionsPage }),
   
   // Legacy
-  customersRoute.addChildren([customersIndexRoute, customerDetailRoute]),
+  customersRoute.addChildren([customersIndexRoute, customersNewRoute, customerDetailRoute]),
+
+  // ─── Clinic Management System ─────────────────────────────
+  // Patients
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/patients', component: ClinicPatientsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/patients/new', component: ClinicNewPatientPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/patients/$id', component: ClinicPatientDetailPage }),
+  // Appointments
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/appointments', component: ClinicAppointmentsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/appointments/new', component: ClinicAppointmentsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/appointments/$id', component: ClinicAppointmentsPage }),
+  // Consultation Records
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/records', component: ClinicPatientsPage }),
+  // Billing
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/billing', component: ClinicBillingPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/billing/new', component: ClinicBillingPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/billing/$id', component: ClinicBillingPage }),
+  // Doctors
+  createRoute({ getParentRoute: () => rootRoute, path: 'clinic/doctors', component: ClinicPatientsPage }),
 ])
 
 // ─── Router Instance ─────────────────────────────────────────

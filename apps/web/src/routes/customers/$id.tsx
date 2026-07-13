@@ -211,12 +211,14 @@ export function CustomerDetailPage() {
               <>
                 <Input
                   label="Name"
+                  name="name"
                   value={formData.name}
                   onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
                   error={errors.name}
                 />
                 <Input
                   label="Email"
+                  name="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
@@ -224,6 +226,7 @@ export function CustomerDetailPage() {
                 />
                 <Input
                   label="Phone"
+                  name="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData((f) => ({ ...f, phone: e.target.value }))}
@@ -231,6 +234,7 @@ export function CustomerDetailPage() {
                 />
                 <Input
                   label="Company"
+                  name="company"
                   value={formData.company}
                   onChange={(e) => setFormData((f) => ({ ...f, company: e.target.value }))}
                   error={errors.company}
@@ -238,6 +242,7 @@ export function CustomerDetailPage() {
                 <div className="sm:col-span-2">
                   <Input
                     label="Website"
+                    name="website"
                     type="url"
                     value={formData.website}
                     onChange={(e) => setFormData((f) => ({ ...f, website: e.target.value }))}

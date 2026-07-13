@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "lint": "eslint .",
     "clean": "rm -rf dist .turbo"
   },
@@ -16,6 +16,7 @@
     "@repo/audit-trail": "workspace:*",
     "@repo/core": "workspace:*",
     "@repo/db-dexie": "workspace:*",
+    "@repo/entity-clinic": "workspace:*",
     "@repo/entity-customer": "workspace:*",
     "@repo/feature-flags": "workspace:*",
     "@repo/multi-tenant": "workspace:*",

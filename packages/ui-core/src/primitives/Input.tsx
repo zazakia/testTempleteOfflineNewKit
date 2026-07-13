@@ -9,7 +9,8 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, helperText, id, ...props }, ref) => {
-    const inputId = id ?? `input-${props.name ?? Math.random().toString(36).slice(2)}`
+    const fallbackId = React.useId()
+    const inputId = id ?? props.name ?? fallbackId
 
     return (
       <div className="space-y-1">

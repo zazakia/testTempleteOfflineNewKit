@@ -16,6 +16,13 @@ import type { ShareCapitalTransaction } from '@repo/entity-share-capital'
 import type { SavingsTransaction } from '@repo/entity-savings'
 import type { Loan, LoanProduct, LoanApplication, Payment } from '@repo/entity-loan'
 import type { JournalEntry, ChartOfAccount } from '@repo/entity-accounting'
+import type {
+  ClinicPatient,
+  ClinicDoctor,
+  ClinicAppointment,
+  ClinicConsultationRecord,
+  ClinicBilling,
+} from '@repo/entity-clinic'
 
 // Register all entity packages (self-registers with EntityRegistry)
 import '@repo/entity-customer'
@@ -26,6 +33,7 @@ import '@repo/entity-loan'
 import '@repo/entity-accounting'
 import '@repo/entity-collection'
 import '@repo/entity-governance'
+import '@repo/entity-clinic'   // ← Clinic Management System
 
 // ─── Tenant Context Factory ──────────────────────────────────
 // Reads current auth state to provide tenant isolation context.
@@ -133,6 +141,14 @@ export const wsDeliveryRepo: Repository<any> = createRepo<any>('ws_deliveries')
 export const wsContainerRepo: Repository<any> = createRepo<any>('ws_containers')
 export const wsPaymentRepo: Repository<any> = createRepo<any>('ws_payments')
 
+// ─── Clinic Management System ─────────────────────────
+// Full medical clinic: patients, doctors, appointments, records, billing
+export const clinicPatientRepo: Repository<ClinicPatient> = createRepo<ClinicPatient>('clinic_patients')
+export const clinicDoctorRepo: Repository<ClinicDoctor> = createRepo<ClinicDoctor>('clinic_doctors')
+export const clinicAppointmentRepo: Repository<ClinicAppointment> = createRepo<ClinicAppointment>('clinic_appointments')
+export const clinicRecordRepo: Repository<ClinicConsultationRecord> = createRepo<ClinicConsultationRecord>('clinic_consultation_records')
+export const clinicBillingRepo: Repository<ClinicBilling> = createRepo<ClinicBilling>('clinic_billing')
+
 // ─── Expose repos for runtime testing (console / E2E) ────────
 if (typeof window !== 'undefined') {
   ;(window as any).__DB__ = {
@@ -168,6 +184,12 @@ if (typeof window !== 'undefined') {
     wsDeliveryRepo,
     wsContainerRepo,
     wsPaymentRepo,
+    // Clinic Management System
+    clinicPatientRepo,
+    clinicDoctorRepo,
+    clinicAppointmentRepo,
+    clinicRecordRepo,
+    clinicBillingRepo,
   }
 }
 

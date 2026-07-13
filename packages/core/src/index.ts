@@ -38,6 +38,7 @@ export type { EntityDefinition, EntityUIConfig, EntitySyncConfig, EntityHooks, H
 
 // Validation
 export { extractFieldsFromSchema } from './validation/field-extractor'
+export type { FieldDef } from './validation/field-extractor'
 export {
   entityIdSchema,
   timestampSchema,
