@@ -1,6 +1,7 @@
 /**
  * ─── Sync Routes ─────────────────────────────────────────────
  * Push/pull endpoints for the offline sync engine.
+ * Backed by Supabase when configured, in-memory otherwise.
  */
 
 import { Hono } from 'hono'
@@ -52,10 +53,10 @@ syncRouter.post('/push', zValidator('json', pushSchema), async (c) => {
         continue
       }
 
-      const existing = serverStore.getEntity(change.entityId)
+      const existing = await serverStore.getEntity(change.entityId)
 
       if (change.operation === 'delete') {
-        serverStore.upsertEntity(change.entityType, {
+        await serverStore.upsertEntity(change.entityType, {
           ...change.data,
           deletedAt: Date.now(),
         }, tenantId)
@@ -72,11 +73,11 @@ syncRouter.post('/push', zValidator('json', pushSchema), async (c) => {
           continue
         }
 
-        serverStore.upsertEntity(change.entityType, change.data, tenantId)
+        await serverStore.upsertEntity(change.entityType, change.data, tenantId)
         syncedIds.push(change.id)
       }
 
-      serverStore.appendChangeLog({
+      await serverStore.appendChangeLog({
         ...change,
         status: 'synced',
       })
@@ -100,7 +101,7 @@ syncRouter.get('/pull', async (c) => {
   const since = parseInt(c.req.query('since') ?? '0', 10)
   const tenantId = c.var.tenantId ?? 'default'
 
-  const changes = serverStore.getChangesSince(since, tenantId)
+  const changes = await serverStore.getChangesSince(since, tenantId)
 
   return c.json({
     changes,
@@ -110,8 +111,9 @@ syncRouter.get('/pull', async (c) => {
 
 // ─── Health ──────────────────────────────────────────────
 
-syncRouter.get('/health', (c) => {
-  return c.json(serverStore.getHealth())
+syncRouter.get('/health', async (c) => {
+  const health = await serverStore.getHealth()
+  return c.json(health)
 })
 
 export { syncRouter }

@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { app } from '../index'
-import { serverStore } from '../db/store'
+import { serverStore, inMemoryStore } from '../db/store'
 
 describe('Sync API Routes', () => {
   beforeEach(() => {
-    // Clear/reset the serverStore in-memory data for clean tests
-    ;(serverStore as any).entities = new Map()
-    ;(serverStore as any).changeLog = []
+    // Reset the in-memory store for clean tests
+    ;(inMemoryStore as any).entities = new Map()
+    ;(inMemoryStore as any).changeLog = []
   })
 
   describe('GET /sync/health', () => {
@@ -53,12 +53,12 @@ describe('Sync API Routes', () => {
       expect(pushJson.syncedCount).toBe(1)
       expect(pushJson.errors).toHaveLength(0)
 
-      // Verify serverStore has the entity
-      const savedEntity = serverStore.getEntity('cust-abc')
+      // Verify serverStore has the entity (async)
+      const savedEntity = await serverStore.getEntity('cust-abc')
       expect(savedEntity).toBeDefined()
       expect(savedEntity!.data.name).toBe('John Doe')
 
-      // 2. Pull changes
+      // 2. Pull changes (async)
       const pullRes = await app.request('/sync/pull?tenant=default&since=0')
       expect(pullRes.status).toBe(200)
       const pullJson = await pullRes.json()

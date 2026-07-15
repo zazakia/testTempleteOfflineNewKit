@@ -11,10 +11,11 @@ import { memberRepo, loanRepo, paymentRepo, shareCapitalRepo, savingsRepo, chart
 import { buildLookups } from '../../lib/lookups'
 import { ReportGenerator } from '@repo/entity-accounting'
 import { LoanService } from '@repo/entity-loan'
+import { PRINT_STYLES, printReport } from '../../lib/print'
 import { 
   BarChart3, Download, FileText, TrendingUp, AlertTriangle, 
   Users, Banknote, PiggyBank, Receipt, ScrollText, Landmark,
-  Calendar
+  Calendar, Printer
 } from 'lucide-react'
 
 type ReportType = 
@@ -130,6 +131,7 @@ export function ReportsPage() {
 
   return (
     <div className="p-6">
+      <style>{PRINT_STYLES}</style>
       <div className="mb-6 flex items-center gap-3">
         <Calendar className="h-5 w-5 text-gray-400" />
         <select value={period.month} onChange={e => setPeriod(p => ({ ...p, month: +e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-2 text-sm">
@@ -153,7 +155,17 @@ export function ReportsPage() {
             </div>
           ))}
         </div>
-        <div className="flex-1 min-w-0">{renderReport()}</div>
+        <div className="flex-1 min-w-0">
+          <div className="mb-3 flex justify-end no-print">
+            <button
+              onClick={() => printReport(`${activeReport.replace(/-/g,' ')} — CoopERP`)}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+            >
+              <Printer className="h-4 w-4" /> Print / Save PDF
+            </button>
+          </div>
+          {renderReport()}
+        </div>
       </div>
     </div>
   )

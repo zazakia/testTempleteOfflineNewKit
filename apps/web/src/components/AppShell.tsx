@@ -6,6 +6,7 @@
 import React, { useState, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useOnlineStatus } from '@repo/ui-core'
+import { useAuth } from '../context/AuthContext'
 import {
   LayoutDashboard,
   Users,
@@ -39,7 +40,6 @@ import {
 } from 'lucide-react'
 import { useSyncStore, useAppStore } from '../store/app'
 import { cn, Button } from '@repo/ui-core'
-import { useAuth } from '../context/AuthContext'
 import { ToastContainer } from './ToastContainer'
 import { useFeatureFlag, useFlagContext } from '../context/FeatureFlagContext'
 import { useDynamicNav } from '../hooks/useDynamicNav'
@@ -85,8 +85,8 @@ export const AppShell = React.memo(function AppShell({ children }: { children: R
   const { online } = useOnlineStatus()
   const { pendingCount } = useSyncStore()
   const location = useLocation()
+  const { user, logout, switchRole } = useAuth()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
 
   // Feature flags — evaluated reactively per user/tenant/env
   const showAnalytics = useFeatureFlag('export.csv')

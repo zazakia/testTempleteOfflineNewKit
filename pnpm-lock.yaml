@@ -54,9 +54,15 @@ importers:
       '@repo/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@supabase/supabase-js':
+        specifier: ^2.110.2
+        version: 2.110.2
       hono:
         specifier: ^4.5.0
         version: 4.12.28
+      jose:
+        specifier: ^5.0.0
+        version: 5.10.0
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -4520,6 +4526,9 @@ packages:
 
   join-component@1.1.0:
     resolution: {integrity: sha512-bF7vcQxbODoGK1imE2P9GS9aw4zD0Sd+Hni68IMZLj7zRnquH7dXUmMw9hDI5S/Jzt7q+IyTXN0rSg2GI0IKhQ==}
+
+  jose@5.10.0:
+    resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -10954,6 +10963,8 @@ snapshots:
   jiti@1.21.7: {}
 
   join-component@1.1.0: {}
+
+  jose@5.10.0: {}
 
   js-tokens@4.0.0: {}
 

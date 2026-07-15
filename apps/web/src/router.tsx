@@ -81,6 +81,7 @@ import { DailyCollectionSheetPage } from './routes/portal/collector/collection-s
 import { AuditSettingsPage } from './routes/settings/audit-settings'
 import { BorrowerDocumentsPage } from './routes/portal/borrower/documents'
 import { CollectorDailyLogPage } from './routes/portal/collector/daily-log'
+import { AuditLogPage } from './routes/settings/audit-log'
 
 const trialBalanceRoute = createRoute({
   getParentRoute: () => accountingRoute,
@@ -353,6 +354,7 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: 'portal/collector/daily-sheet', component: DailyCollectionSheetPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'portal/borrower/request', component: BorrowerLoanRequestPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'settings/audit', component: AuditSettingsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'settings/audit-log', component: AuditLogPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'portal/collector/daily-log', component: CollectorDailyLogPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'portal/borrower/documents', component: BorrowerDocumentsPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'portal/borrower/profile', component: BorrowerProfilePage }),

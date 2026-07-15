@@ -2,9 +2,15 @@ import { describe, it, expect } from 'vitest'
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 
+type Variables = {
+  userId: string
+  tenantId: string
+  roles: string[]
+}
+
 describe('Auth Middleware', () => {
   it('should set default credentials when no auth header is present', async () => {
-    const app = new Hono()
+    const app = new Hono<{ Variables: Variables }>()
     app.use('*', authMiddleware)
     app.get('/test', (c) => {
       return c.json({
@@ -23,7 +29,7 @@ describe('Auth Middleware', () => {
   })
 
   it('should parse valid JWT token from Authorization header', async () => {
-    const app = new Hono()
+    const app = new Hono<{ Variables: Variables }>()
     app.use('*', authMiddleware)
     app.get('/test', (c) => {
       return c.json({
@@ -34,7 +40,6 @@ describe('Auth Middleware', () => {
     })
 
     // Construct a simple mock JWT token: header.payload.signature
-    // We only care about payload (atob decoding).
     const payloadObj = {
       sub: 'user-789',
       tenant: 'tenant-custom',
@@ -57,7 +62,7 @@ describe('Auth Middleware', () => {
   })
 
   it('should fall back to defaults if token is malformed', async () => {
-    const app = new Hono()
+    const app = new Hono<{ Variables: Variables }>()
     app.use('*', authMiddleware)
     app.get('/test', (c) => {
       return c.json({
