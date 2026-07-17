@@ -159,6 +159,7 @@ export function GenericList({
   filter,
   onRowClick,
   title,
+  lookups,
   pageSize = 20,
 }: GenericListProps) {
   const columns = customColumns ?? useMemo(() => inferColumns(entityName), [entityName])
