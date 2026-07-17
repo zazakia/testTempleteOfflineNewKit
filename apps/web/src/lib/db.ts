@@ -23,6 +23,24 @@ import type {
   ClinicConsultationRecord,
   ClinicBilling,
 } from '@repo/entity-clinic'
+import type { Branch } from '@repo/entity-branch'
+import type { ChangelogEntry } from '@repo/entity-changelog'
+import type {
+  LaundryCustomer,
+  LaundryService,
+  LaundryOrder,
+  LaundryPayment,
+  LaundryInventory,
+} from '@repo/entity-laundry'
+import type {
+  DrivingStudent,
+  DrivingInstructor,
+  DrivingCourse,
+  DrivingEnrollment,
+  DrivingSchedule,
+  DrivingPayment,
+  DrivingVehicle,
+} from '@repo/entity-driving-school'
 
 // Register all entity packages (self-registers with EntityRegistry)
 import '@repo/entity-customer'
@@ -33,7 +51,11 @@ import '@repo/entity-loan'
 import '@repo/entity-accounting'
 import '@repo/entity-collection'
 import '@repo/entity-governance'
-import '@repo/entity-clinic'   // ← Clinic Management System
+import '@repo/entity-clinic'          // ← Clinic Management System
+import '@repo/entity-branch'          // ← Multi-Branch Management
+import '@repo/entity-changelog'       // ← Changelog / Roadmap
+import '@repo/entity-laundry'         // ← Laundry Shop Multi-Branch
+import '@repo/entity-driving-school'  // ← Driving School Multi-Branch
 
 // ─── Tenant Context Factory ──────────────────────────────────
 // Reads current auth state to provide tenant isolation context.
@@ -149,6 +171,28 @@ export const clinicAppointmentRepo: Repository<ClinicAppointment> = createRepo<C
 export const clinicRecordRepo: Repository<ClinicConsultationRecord> = createRepo<ClinicConsultationRecord>('clinic_consultation_records')
 export const clinicBillingRepo: Repository<ClinicBilling> = createRepo<ClinicBilling>('clinic_billing')
 
+// ─── Multi-Branch Management ─────────────────────────────────
+export const branchRepo: Repository<Branch> = createRepo<Branch>('branches')
+
+// ─── Changelog / Roadmap ─────────────────────────────────────
+export const changelogRepo: Repository<ChangelogEntry> = createRepo<ChangelogEntry>('changelog_entries')
+
+// ─── Laundry Shop System ─────────────────────────────────────
+export const laundryCustomerRepo: Repository<LaundryCustomer> = createRepo<LaundryCustomer>('laundry_customers')
+export const laundryServiceRepo: Repository<LaundryService> = createRepo<LaundryService>('laundry_services')
+export const laundryOrderRepo: Repository<LaundryOrder> = createRepo<LaundryOrder>('laundry_orders')
+export const laundryPaymentRepo: Repository<LaundryPayment> = createRepo<LaundryPayment>('laundry_payments')
+export const laundryInventoryRepo: Repository<LaundryInventory> = createRepo<LaundryInventory>('laundry_inventory')
+
+// ─── Driving School System ───────────────────────────────────
+export const drivingStudentRepo: Repository<DrivingStudent> = createRepo<DrivingStudent>('driving_students')
+export const drivingInstructorRepo: Repository<DrivingInstructor> = createRepo<DrivingInstructor>('driving_instructors')
+export const drivingCourseRepo: Repository<DrivingCourse> = createRepo<DrivingCourse>('driving_courses')
+export const drivingEnrollmentRepo: Repository<DrivingEnrollment> = createRepo<DrivingEnrollment>('driving_enrollments')
+export const drivingScheduleRepo: Repository<DrivingSchedule> = createRepo<DrivingSchedule>('driving_schedules')
+export const drivingPaymentRepo: Repository<DrivingPayment> = createRepo<DrivingPayment>('driving_payments')
+export const drivingVehicleRepo: Repository<DrivingVehicle> = createRepo<DrivingVehicle>('driving_vehicles')
+
 // ─── Expose repos for runtime testing (console / E2E) ────────
 if (typeof window !== 'undefined') {
   ;(window as any).__DB__ = {
@@ -190,6 +234,24 @@ if (typeof window !== 'undefined') {
     clinicAppointmentRepo,
     clinicRecordRepo,
     clinicBillingRepo,
+    // Multi-Branch Management
+    branchRepo,
+    // Changelog / Roadmap
+    changelogRepo,
+    // Laundry Shop System
+    laundryCustomerRepo,
+    laundryServiceRepo,
+    laundryOrderRepo,
+    laundryPaymentRepo,
+    laundryInventoryRepo,
+    // Driving School System
+    drivingStudentRepo,
+    drivingInstructorRepo,
+    drivingCourseRepo,
+    drivingEnrollmentRepo,
+    drivingScheduleRepo,
+    drivingPaymentRepo,
+    drivingVehicleRepo,
   }
 }
 

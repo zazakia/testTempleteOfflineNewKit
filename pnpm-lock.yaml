@@ -282,12 +282,24 @@ importers:
       '@repo/db-dexie':
         specifier: workspace:*
         version: link:../../packages/db-adapter-dexie
+      '@repo/entity-branch':
+        specifier: workspace:*
+        version: link:../../packages/entity-branch
+      '@repo/entity-changelog':
+        specifier: workspace:*
+        version: link:../../packages/entity-changelog
       '@repo/entity-clinic':
         specifier: workspace:*
         version: link:../../packages/entity-clinic
       '@repo/entity-customer':
         specifier: workspace:*
         version: link:../../packages/entity-customer
+      '@repo/entity-driving-school':
+        specifier: workspace:*
+        version: link:../../packages/entity-driving-school
+      '@repo/entity-laundry':
+        specifier: workspace:*
+        version: link:../../packages/entity-laundry
       '@repo/feature-flags':
         specifier: workspace:*
         version: link:../../packages/feature-flags
@@ -477,6 +489,24 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.48.0)
 
+  packages/entity-branch:
+    dependencies:
+      '@repo/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+
+  packages/entity-changelog:
+    dependencies:
+      '@repo/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+
   packages/entity-clinic:
     dependencies:
       '@repo/core':
@@ -531,7 +561,39 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.48.0)
 
+  packages/entity-driving-school:
+    dependencies:
+      '@repo/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.48.0)
+
   packages/entity-governance:
+    dependencies:
+      '@repo/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.48.0)
+
+  packages/entity-laundry:
     dependencies:
       '@repo/core':
         specifier: workspace:*

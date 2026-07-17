@@ -65,6 +65,27 @@ import { ClinicNewPatientPage } from './routes/clinic/patients/new'
 import { ClinicPatientDetailPage } from './routes/clinic/patients/$id'
 import { ClinicAppointmentsPage } from './routes/clinic/appointments/index'
 import { ClinicBillingPage } from './routes/clinic/billing/index'
+
+// Multi-Branch Management
+import { BranchListPage } from './routes/branches/index'
+import { CreateBranchPage } from './routes/branches/new'
+import { BranchDetailPage } from './routes/branches/$id'
+
+// Changelog / Roadmap
+import { ChangelogPage } from './routes/changelog/index'
+import { CreateChangelogEntryPage } from './routes/changelog/new'
+import { ChangelogDetailPage } from './routes/changelog/$id'
+
+// Laundry Shop Management System
+import { LaundryCustomersPage } from './routes/laundry/customers/index'
+import { LaundryOrdersPage } from './routes/laundry/orders/index'
+import { LaundryServicesPage } from './routes/laundry/services/index'
+
+// Driving School Management System
+import { DrivingStudentsPage } from './routes/driving-school/students/index'
+import { DrivingEnrollmentsPage } from './routes/driving-school/enrollments/index'
+import { DrivingCoursesPage } from './routes/driving-school/courses/index'
+
 import { PayrollPage } from './routes/payroll/index'
 import { GovernancePage } from './routes/governance/index'
 import { CashOnHandPage } from './routes/cash-on-hand/index'
@@ -363,6 +384,17 @@ const routeTree = rootRoute.addChildren([
   // Legacy
   customersRoute.addChildren([customersIndexRoute, customersNewRoute, customerDetailRoute]),
 
+  // ─── Multi-Branch Management ──────────────────────────────
+  // Branches
+  createRoute({ getParentRoute: () => rootRoute, path: 'branches', component: BranchListPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'branches/new', component: CreateBranchPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'branches/$id', component: BranchDetailPage }),
+
+  // ─── Changelog / Roadmap ───────────────────────────────────
+  createRoute({ getParentRoute: () => rootRoute, path: 'changelog', component: ChangelogPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'changelog/new', component: CreateChangelogEntryPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'changelog/$id', component: ChangelogDetailPage }),
+
   // ─── Clinic Management System ─────────────────────────────
   // Patients
   createRoute({ getParentRoute: () => rootRoute, path: 'clinic/patients', component: ClinicPatientsPage }),
@@ -380,6 +412,22 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: 'clinic/billing/$id', component: ClinicBillingPage }),
   // Doctors
   createRoute({ getParentRoute: () => rootRoute, path: 'clinic/doctors', component: ClinicPatientsPage }),
+
+  // ─── Laundry Shop System ───────────────────────────────────
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/customers', component: LaundryCustomersPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/orders', component: LaundryOrdersPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/services', component: LaundryServicesPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/payments', component: LaundryCustomersPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/inventory', component: LaundryCustomersPage }),
+
+  // ─── Driving School System ─────────────────────────────────
+  createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/students', component: DrivingStudentsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/enrollments', component: DrivingEnrollmentsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/courses', component: DrivingCoursesPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/schedules', component: DrivingStudentsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/payments', component: DrivingStudentsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/instructors', component: DrivingStudentsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/vehicles', component: DrivingStudentsPage }),
 ])
 
 // ─── Router Instance ─────────────────────────────────────────

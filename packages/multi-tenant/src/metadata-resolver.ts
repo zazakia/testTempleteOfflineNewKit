@@ -107,6 +107,120 @@ export const DEFAULT_APPROVAL_WORKFLOW: Record<string, ApprovalWorkflow> = {
   },
 }
 
+// ─── Branch Config ──────────────────────────────────────────
+
+export interface BranchConfig {
+  /** Whether multi-branch is enabled for this tenant */
+  enabled: boolean
+  /** Allow users from one branch to see data from other branches */
+  allowCrossBranchAccess: boolean
+  /** Require branch assignment when creating a member */
+  requireBranchOnMember: boolean
+  /** Require branch assignment when creating a loan */
+  requireBranchOnLoan: boolean
+  /** Whether loan products are shared across branches */
+  sharedProducts: boolean
+}
+
+export const DEFAULT_BRANCH_CONFIG: BranchConfig = {
+  enabled: false,
+  allowCrossBranchAccess: true,
+  requireBranchOnMember: false,
+  requireBranchOnLoan: false,
+  sharedProducts: true,
+}
+
+// ─── Laundry Domain ────────────────────────────────────
+
+export interface LaundryBusinessConfig {
+  /** Loyalty points earned per PHP 100 spent */
+  loyaltyPointsRate: number
+  /** Minimum points to redeem */
+  loyaltyRedemptionMinPoints: number
+  /** PHP equivalent per 100 points */
+  loyaltyRedemptionPHPEquivalent: number
+  /** Tier upgrade lifetime spend thresholds (PHP) */
+  tierThresholds: Record<string, number>
+  /** Express surcharge multiplier */
+  expressSurchargeMultiplier: number
+  /** Rush surcharge multiplier */
+  rushSurchargeMultiplier: number
+  /** Default VAT rate (e.g. 0.12 for 12%) */
+  vatRate: number
+  /** Auto-compute tax for orders above this amount */
+  vatThreshold: number
+  /** Default turnaround hours per priority */
+  turnaroundHours: Record<string, number>
+}
+
+export const DEFAULT_LAUNDRY_CONFIG: LaundryBusinessConfig = {
+  loyaltyPointsRate: 1,
+  loyaltyRedemptionMinPoints: 500,
+  loyaltyRedemptionPHPEquivalent: 50,
+  tierThresholds: {
+    bronze: 0,
+    silver: 5000,
+    gold: 20000,
+    platinum: 50000,
+  },
+  expressSurchargeMultiplier: 1.5,
+  rushSurchargeMultiplier: 2.0,
+  vatRate: 0.12,
+  vatThreshold: 500,
+  turnaroundHours: {
+    normal: 48,
+    express: 24,
+    rush: 6,
+  },
+}
+
+// ─── Driving School Domain ───────────────────────────────
+
+export interface DrivingSchoolConfig {
+  /** Minimum age for student permit */
+  minimumAgeStudentPermit: number
+  /** Minimum age for non-professional license */
+  minimumAgeNonPro: number
+  /** Minimum age for professional license */
+  minimumAgeProfessional: number
+  /** Passing score for theory exam (percentage) */
+  theoryPassingScore: number
+  /** Passing score for practical exam (percentage) */
+  practicalPassingScore: number
+  /** Default TDC hours required (LTO mandate) */
+  requiredTDCHours: number
+  /** Default PDC hours required for cars */
+  requiredPDCCarHours: number
+  /** Default PDC hours required for motorcycles */
+  requiredPDCMotorcycleHours: number
+  /** Maximum reschedules allowed per enrollment */
+  maxReschedules: number
+  /** Installment plan: max number of installments */
+  maxInstallments: number
+  /** Installment plan: minimum down payment percentage */
+  minDownPaymentPercent: number
+  /** Certificate validity period in days */
+  certificateValidityDays: number
+  /** Auto-cancel enrollment if no activity for X days */
+  inactivityCancelDays: number
+}
+
+export const DEFAULT_DRIVING_SCHOOL_CONFIG: DrivingSchoolConfig = {
+  minimumAgeStudentPermit: 16,
+  minimumAgeNonPro: 17,
+  minimumAgeProfessional: 18,
+  theoryPassingScore: 70,
+  practicalPassingScore: 75,
+  requiredTDCHours: 15,
+  requiredPDCCarHours: 8,
+  requiredPDCMotorcycleHours: 8,
+  maxReschedules: 3,
+  maxInstallments: 6,
+  minDownPaymentPercent: 30,
+  certificateValidityDays: 365,
+  inactivityCancelDays: 90,
+}
+
 // ─── Resolver ─────────────────────────────────────────────────
 
 export class MetadataResolver {
@@ -200,12 +314,85 @@ export class MetadataResolver {
     return uiConfig.customFields[entity] ?? []
   }
 
-  // ─── Approval Workflows ────────────────────────────────
+    // ─── Approval Workflows ────────────────────────────────
 
   /** Get approval workflow for a given module */
   async getApprovalWorkflow(tenantId: string, module: string): Promise<ApprovalWorkflow> {
     const metadata = await this.getMetadata(tenantId)
     const workflows = (metadata.approvalWorkflows as Record<string, ApprovalWorkflow> | undefined) ?? {}
     return workflows[module] ?? DEFAULT_APPROVAL_WORKFLOW[module] ?? { steps: [] }
+  }
+
+  // ─── Branch Domain ────────────────────────────────────
+
+  /** Get branch configuration for a tenant */
+  async getBranchConfig(tenantId: string): Promise<BranchConfig> {
+    const metadata = await this.getMetadata(tenantId)
+    const branch = (metadata.branch as Record<string, unknown> | undefined) ?? {}
+
+    return {
+      enabled: (branch.enabled as boolean) ?? DEFAULT_BRANCH_CONFIG.enabled,
+      allowCrossBranchAccess:
+        (branch.allowCrossBranchAccess as boolean) ??
+        DEFAULT_BRANCH_CONFIG.allowCrossBranchAccess,
+      requireBranchOnMember:
+        (branch.requireBranchOnMember as boolean) ??
+        DEFAULT_BRANCH_CONFIG.requireBranchOnMember,
+      requireBranchOnLoan:
+        (branch.requireBranchOnLoan as boolean) ??
+        DEFAULT_BRANCH_CONFIG.requireBranchOnLoan,
+      sharedProducts:
+        (branch.sharedProducts as boolean) ??
+        DEFAULT_BRANCH_CONFIG.sharedProducts,
+    }
+  }
+
+  // ─── Laundry Domain ────────────────────────────────────
+
+  /** Get laundry business configuration for a tenant */
+  async getLaundryConfig(tenantId: string): Promise<LaundryBusinessConfig> {
+    const metadata = await this.getMetadata(tenantId)
+    const laundry = (metadata.laundry as Record<string, unknown> | undefined) ?? {}
+    const loyalty = (laundry.loyalty as Record<string, unknown> | undefined) ?? {}
+    const tiers = (laundry.tierThresholds as Record<string, number> | undefined) ?? DEFAULT_LAUNDRY_CONFIG.tierThresholds
+    const turnaround = (laundry.turnaroundHours as Record<string, number> | undefined) ?? DEFAULT_LAUNDRY_CONFIG.turnaroundHours
+
+    return {
+      loyaltyPointsRate: (loyalty.pointsRate as number) ?? DEFAULT_LAUNDRY_CONFIG.loyaltyPointsRate,
+      loyaltyRedemptionMinPoints: (loyalty.redemptionMinPoints as number) ?? DEFAULT_LAUNDRY_CONFIG.loyaltyRedemptionMinPoints,
+      loyaltyRedemptionPHPEquivalent: (loyalty.redemptionPHPEquivalent as number) ?? DEFAULT_LAUNDRY_CONFIG.loyaltyRedemptionPHPEquivalent,
+      tierThresholds: tiers,
+      expressSurchargeMultiplier: (laundry.expressSurchargeMultiplier as number) ?? DEFAULT_LAUNDRY_CONFIG.expressSurchargeMultiplier,
+      rushSurchargeMultiplier: (laundry.rushSurchargeMultiplier as number) ?? DEFAULT_LAUNDRY_CONFIG.rushSurchargeMultiplier,
+      vatRate: (laundry.vatRate as number) ?? DEFAULT_LAUNDRY_CONFIG.vatRate,
+      vatThreshold: (laundry.vatThreshold as number) ?? DEFAULT_LAUNDRY_CONFIG.vatThreshold,
+      turnaroundHours: turnaround,
+    }
+  }
+
+  // ─── Driving School Domain ─────────────────────────────
+
+  /** Get driving school configuration for a tenant */
+  async getDrivingSchoolConfig(tenantId: string): Promise<DrivingSchoolConfig> {
+    const metadata = await this.getMetadata(tenantId)
+    const ds = (metadata.drivingSchool as Record<string, unknown> | undefined) ?? {}
+    const lto = (ds.lto as Record<string, unknown> | undefined) ?? {}
+    const installment = (ds.installment as Record<string, unknown> | undefined) ?? {}
+
+    return {
+      minimumAgeStudentPermit: (lto.minimumAgeStudentPermit as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.minimumAgeStudentPermit,
+      minimumAgeNonPro: (lto.minimumAgeNonPro as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.minimumAgeNonPro,
+      minimumAgeProfessional: (lto.minimumAgeProfessional as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.minimumAgeProfessional,
+      theoryPassingScore: (ds.theoryPassingScore as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.theoryPassingScore,
+      practicalPassingScore: (ds.practicalPassingScore as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.practicalPassingScore,
+      requiredTDCHours: (lto.requiredTDCHours as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.requiredTDCHours,
+      requiredPDCCarHours: (lto.requiredPDCCarHours as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.requiredPDCCarHours,
+      requiredPDCMotorcycleHours: (lto.requiredPDCMotorcycleHours as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.requiredPDCMotorcycleHours,
+      maxReschedules: (ds.maxReschedules as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.maxReschedules,
+      maxInstallments: (installment.maxInstallments as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.maxInstallments,
+      minDownPaymentPercent: (installment.minDownPaymentPercent as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.minDownPaymentPercent,
+      certificateValidityDays: (ds.certificateValidityDays as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.certificateValidityDays,
+      inactivityCancelDays: (ds.inactivityCancelDays as number) ?? DEFAULT_DRIVING_SCHOOL_CONFIG.inactivityCancelDays,
+    }
   }
 }

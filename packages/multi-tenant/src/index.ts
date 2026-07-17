@@ -96,6 +96,9 @@ export type {
   UIConfig,
   ApprovalStep,
   ApprovalWorkflow,
+  BranchConfig,
+  LaundryBusinessConfig,
+  DrivingSchoolConfig,
 } from './metadata-resolver'
 export {
   DEFAULT_INTEREST_FORMULAS,
@@ -103,4 +106,7 @@ export {
   DEFAULT_SAVINGS_CONFIG,
   DEFAULT_UI_CONFIG,
   DEFAULT_APPROVAL_WORKFLOW,
+  DEFAULT_BRANCH_CONFIG,
+  DEFAULT_LAUNDRY_CONFIG,
+  DEFAULT_DRIVING_SCHOOL_CONFIG,
 } from './metadata-resolver'
