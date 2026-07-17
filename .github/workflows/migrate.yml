@@ -9,15 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
       - name: Run migrations
         run: |
-          cd $GITHUB_WORKSPACE
+          npm install pg --no-save
           node -e "
             const { Pool } = require('pg');
             const fs = require('fs');
@@ -35,7 +32,7 @@ jobs:
               });
 
               try {
-                console.log('Connecting...');
+                console.log('Connecting to Supabase...');
                 await pool.query('SELECT 1');
                 console.log('Connected!');
 
@@ -48,7 +45,7 @@ jobs:
                   const sql = fs.readFileSync(
                     path.join('supabase', 'migrations', file), 'utf8'
                   );
-                  console.log('Running ' + file + '...');
+                  console.log('Running ' + file + ' (' + sql.length + ' bytes)...');
                   await pool.query(sql);
                   console.log('✓ ' + file + ' completed');
                 }
@@ -63,5 +60,3 @@ jobs:
             }
             run();
           "
-        env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
