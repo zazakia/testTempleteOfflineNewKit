@@ -1,0 +1,69 @@
+name: Run Migrations
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    name: Run Supabase Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Run migrations
+        run: |
+          cd $GITHUB_WORKSPACE
+          node -e "
+            const { Pool } = require('pg');
+            const fs = require('fs');
+            const path = require('path');
+
+            async function run() {
+              const pool = new Pool({
+                host: 'db.kzskzalfuvphrvofxddk.supabase.co',
+                port: 5432,
+                database: 'postgres',
+                user: 'postgres',
+                password: '${{ secrets.SUPABASE_DB_PASSWORD }}',
+                ssl: { rejectUnauthorized: false },
+                connectionTimeoutMillis: 20000,
+              });
+
+              try {
+                console.log('Connecting...');
+                await pool.query('SELECT 1');
+                console.log('Connected!');
+
+                const files = [
+                  '00006_laundry_shop.sql',
+                  '00007_driving_school.sql'
+                ];
+
+                for (const file of files) {
+                  const sql = fs.readFileSync(
+                    path.join('supabase', 'migrations', file), 'utf8'
+                  );
+                  console.log('Running ' + file + '...');
+                  await pool.query(sql);
+                  console.log('✓ ' + file + ' completed');
+                }
+
+                console.log('All migrations applied successfully!');
+              } catch(e) {
+                console.error('Error:', e.message);
+                process.exit(1);
+              } finally {
+                await pool.end();
+              }
+            }
+            run();
+          "
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
