@@ -80,6 +80,8 @@ import { ChangelogDetailPage } from './routes/changelog/$id'
 import { LaundryCustomersPage } from './routes/laundry/customers/index'
 import { LaundryOrdersPage } from './routes/laundry/orders/index'
 import { LaundryServicesPage } from './routes/laundry/services/index'
+import { LaundryPaymentsPage } from './routes/laundry/payments/index'
+import { LaundryInventoryPage } from './routes/laundry/inventory/index'
 
 // Driving School Management System
 import { DrivingStudentsPage } from './routes/driving-school/students/index'
@@ -417,8 +419,8 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: 'laundry/customers', component: LaundryCustomersPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'laundry/orders', component: LaundryOrdersPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'laundry/services', component: LaundryServicesPage }),
-  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/payments', component: LaundryCustomersPage }),
-  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/inventory', component: LaundryCustomersPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/payments', component: LaundryPaymentsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/inventory', component: LaundryInventoryPage }),
 
   // ─── Driving School System ─────────────────────────────────
   createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/students', component: DrivingStudentsPage }),
