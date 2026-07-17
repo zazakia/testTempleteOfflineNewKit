@@ -44,7 +44,7 @@ class OfflineDatabase extends Dexie {
     // Core domain: Members & Profiles
     this.version(1).stores({
       // System
-      changeLog: '++id, entityType, entityId, status, timestamp, tenantId',
+      changeLog: '++id, entityType, entityId, status, timestamp, tenantId, clientId',
       user_profiles: 'id, email, role, is_active, createdAt, updatedAt, deletedAt',
       app_settings: 'id, key, scope, is_active, createdAt, updatedAt, deletedAt',
       action_logs: 'id, entityType, entityId, action, performedBy, timestamp, createdAt, [entityType+entityId], [performedBy+timestamp]',
@@ -148,6 +148,50 @@ class OfflineDatabase extends Dexie {
 
       // Billing
       clinic_billing: 'id, tenantId, billingCode, appointmentId, patientId, doctorId, billingDate, status, totalAmount, amountPaid, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [patientId], [status+billingDate], [billingCode]',
+    })
+
+    // ─── v4: Multi-Branch Support ─────────────────────────
+    // Added 2026-07: Branch management for multi-location cooperatives
+    this.version(4).stores({
+      // Branches — physical locations per tenant
+      branches: 'id, tenantId, branchCode, name, isMainBranch, status, cityMunicipality, province, managerName, phone, openedDate, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+status], [branchCode]',
+    })
+
+    // ─── v5: Changelog / Roadmap ──────────────────────────
+    // Added 2026-07: Application changelog and release roadmap
+    this.version(5).stores({
+      // Changelog entries — tracks every update, feature, and change
+      changelog_entries: 'id, tenantId, releaseVersion, title, category, status, author, releasedAt, isBreaking, migrationRequired, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+status], [tenantId+category], [tenantId+releasedAt], [releaseVersion]',
+    })
+
+    // ─── v6: Laundry Shop + Driving School Systems ────────
+    // Added 2026-07: Multi-branch laundry and driving school modules
+    this.version(6).stores({
+      // Laundry Shop — 5 entities
+      laundry_customers: 'id, tenantId, branchId, customerCode, firstName, lastName, fullName, phone, email, customerType, customerTier, lifetimeSpend, loyaltyPoints, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+branchId], [tenantId+customerType], [customerCode]',
+
+      laundry_services: 'id, tenantId, serviceCode, name, category, pricingUnit, basePrice, turnaroundHours, sortOrder, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+category], [serviceCode]',
+
+      laundry_orders: 'id, tenantId, branchId, orderCode, customerId, customerName, orderDate, promisedPickupDate, subtotal, totalAmount, amountPaid, balance, paymentStatus, orderStatus, orderPriority, receivedBy, isDelivery, deliveryFee, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+branchId], [customerId+orderDate], [orderStatus+orderDate], [orderCode]',
+
+      laundry_payments: 'id, tenantId, branchId, paymentCode, orderId, customerId, paymentDate, amount, paymentMethod, receivedBy, loyaltyPointsRedeemed, loyaltyPointsEarned, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [orderId], [customerId+paymentDate], [paymentCode]',
+
+      laundry_inventory: 'id, tenantId, branchId, itemCode, name, category, unit, quantityOnHand, minStockLevel, costPerUnit, supplierName, status, expirationDate, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+branchId], [tenantId+category], [tenantId+status], [itemCode]',
+
+      // Driving School — 7 entities
+      driving_students: 'id, tenantId, branchId, studentCode, firstName, lastName, fullName, phone, email, dateOfBirth, ltoStudentPermitNumber, ltoClientId, status, registrationDate, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+branchId], [tenantId+status], [studentCode]',
+
+      driving_instructors: 'id, tenantId, branchId, instructorCode, firstName, lastName, fullName, phone, ltoAccreditationNumber, licenseType, licenseNumber, yearsOfExperience, ratePerHour, maxStudentsPerDay, status, dateHired, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+branchId], [tenantId+status], [instructorCode]',
+
+      driving_courses: 'id, tenantId, courseCode, name, category, totalHours, theoryHours, practicalHours, baseTuitionFee, minSessionsRequired, ltoAccredited, requiresStudentPermit, minimumAge, maxStudentsPerClass, status, sortOrder, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+category], [tenantId+status], [courseCode]',
+
+      driving_enrollments: 'id, tenantId, branchId, enrollmentCode, studentId, studentName, courseId, courseName, instructorId, instructorName, enrollmentDate, startDate, expectedEndDate, totalFee, amountPaid, balance, enrollmentType, theoryHoursCompleted, practicalHoursCompleted, sessionsAttended, sessionsTotal, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+branchId], [studentId], [courseId], [instructorId], [status+enrollmentDate], [enrollmentCode]',
+
+      driving_schedules: 'id, tenantId, branchId, scheduleCode, enrollmentId, studentId, studentName, instructorId, instructorName, vehicleId, sessionType, sessionDate, startTime, endTime, durationHours, studentAttended, instructorConfirmed, isOnsite, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [enrollmentId], [studentId+sessionDate], [instructorId+sessionDate], [sessionDate], [scheduleCode]',
+
+      driving_payments: 'id, tenantId, branchId, paymentCode, enrollmentId, studentId, studentName, paymentDate, amount, paymentMethod, paymentFor, installmentNumber, officialReceiptNumber, receivedBy, isRefund, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [enrollmentId], [studentId+paymentDate], [paymentCode]',
+
+      driving_vehicles: 'id, tenantId, branchId, vehicleCode, plateNumber, make, model, year, type, transmission, fuelType, ltoRegistrationExpiry, odometerReading, assignedInstructorId, hasDualControl, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+branchId], [tenantId+status], [vehicleCode], [plateNumber], [assignedInstructorId]',
     })
 
     this.changeLog = this.table('changeLog')
@@ -275,7 +319,25 @@ function applySort<T>(items: T[], sort?: { field: string; direction: 'asc' | 'de
 }
 
 /**
+ * Generate or retrieve a persistent client ID for this browser/device.
+ * Stored in localStorage so it survives page reloads.
+ */
+function getClientId(): string {
+  try {
+    const stored = localStorage.getItem('cooperp_client_id')
+    if (stored) return stored
+    const id = uuidv4()
+    localStorage.setItem('cooperp_client_id', id)
+    return id
+  } catch {
+    return uuidv4()
+  }
+}
+
+/**
  * Write a change log entry for sync.
+ * Respects EntitySyncConfig.excludeFields for delta-friendly payloads.
+ * For updates, computes changedFields to enable delta sync.
  */
 async function writeChangeLog(
   operation: 'create' | 'update' | 'delete',
@@ -288,15 +350,53 @@ async function writeChangeLog(
   if (options?.skipSync) return
 
   const db = getDb()
+
+  // ─── Respect excludeFields from EntitySyncConfig ──────────
+  let excludedFields: string[] = []
+  try {
+    if (EntityRegistry.has(entityName)) {
+      const def = EntityRegistry.get(entityName)
+      excludedFields = def.sync.excludeFields ?? []
+    }
+  } catch {
+    // Entity not registered — no exclusions
+  }
+
+  // Strip excluded fields from data blobs
+  const stripExcluded = (obj: Record<string, unknown>): Record<string, unknown> => {
+    if (excludedFields.length === 0) return obj
+    const cleaned: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(obj)) {
+      if (!excludedFields.includes(key)) {
+        cleaned[key] = value
+      }
+    }
+    return cleaned
+  }
+
+  const cleanData = stripExcluded(data)
+  const cleanPrevious = previousData ? stripExcluded(previousData) : undefined
+
+  // ─── Compute changed fields for delta sync ────────────────
+  let changedFields: string[] | undefined
+  if (operation === 'update' && cleanPrevious) {
+    changedFields = Object.keys(cleanData).filter(
+      (key) => JSON.stringify(cleanData[key]) !== JSON.stringify(cleanPrevious[key])
+    )
+    // If nothing actually changed, skip the change log entirely
+    if (changedFields.length === 0) return
+  }
+
   const entry: ChangeLogEntry = {
     id: uuidv4(),
     entityType: entityName,
     entityId,
     operation,
-    data,
-    previousData,
+    data: cleanData,
+    previousData: cleanPrevious,
+    changedFields,
     timestamp: options?.performedAt ?? Date.now(),
-    clientId: 'web-client',
+    clientId: getClientId(),
     tenantId: (data.tenantId as string) ?? 'default',
     performedBy: options?.performedBy ?? 'system',
     status: 'pending',
@@ -505,10 +605,23 @@ export function createDexieRepository<T extends BaseEntity>(
           const searchLower = effectiveQuery.search.toLowerCase()
           filtered = filtered.filter((item) => {
             const itemAny = item as any
-            return (
-              (itemAny.name && String(itemAny.name).toLowerCase().includes(searchLower)) ||
-              (itemAny.email && String(itemAny.email).toLowerCase().includes(searchLower))
-            )
+            // Search across common text fields
+            const searchableFields = [
+              'name', 'email', 'firstName', 'lastName', 'fullName', 'phone',
+              'customerName', 'studentName', 'courseName', 'instructorName',
+              'patientCode', 'customerCode', 'studentCode', 'orderCode',
+              'enrollmentCode', 'scheduleCode', 'itemCode', 'vehicleCode',
+              'memberCode', 'code', 'description', 'notes',
+              'address', 'city', 'province', 'barangay',
+              'plateNumber', 'licenseNumber',
+            ]
+            for (const field of searchableFields) {
+              const val = itemAny[field]
+              if (typeof val === 'string' && val.toLowerCase().includes(searchLower)) {
+                return true
+              }
+            }
+            return false
           })
         }
 
