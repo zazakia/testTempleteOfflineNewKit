@@ -10,6 +10,7 @@
 import { useMemo } from 'react'
 import { EntityRegistry } from '@repo/core'
 import type { EntityDefinition, EntityUIConfig } from '@repo/core'
+import { featureFlags } from '@repo/feature-flags'
 
 export interface DynamicNavItem {
   label: string
@@ -54,6 +55,8 @@ const ROUTE_TO_GROUP: Record<string, string> = {
   '/portal': 'Portals',
   '/water-station': 'Water Station',
   '/clinic': 'Clinic',
+  '/branches': 'Administration',
+  '/changelog': 'Administration',
 }
 
 /** Static nav items that aren't entity-driven */
@@ -63,6 +66,14 @@ const STATIC_NAV: DynamicNavSection[] = [
     items: [{ label: 'Dashboard', icon: 'LayoutDashboard', path: '/', color: 'blue' }],
   },
 ]
+
+/** Static items added to specific groups (not entity-driven) */
+const STATIC_GROUP_ITEMS: Record<string, DynamicNavItem[]> = {
+  'Laundry': [
+    { label: 'Dashboard', icon: 'LayoutDashboard', path: '/laundry', color: 'blue' },
+    { label: 'Reports', icon: 'BarChart3', path: '/laundry/reports', color: 'green' },
+  ],
+}
 
 /** Compute nav group from entity UI config */
 function getNavGroup(ui: EntityUIConfig): string {
@@ -77,8 +88,27 @@ function getNavGroup(ui: EntityUIConfig): string {
 }
 
 /**
+ * Map nav groups to feature flags.
+ * Only groups whose flag is enabled will appear in the sidebar.
+ */
+const NAV_GROUP_FLAGS: Record<string, string> = {
+  'CRM': 'module.customer',
+  'Membership': 'module.cooperative',
+  'Lending': 'module.cooperative',
+  'Finance': 'module.cooperative',
+  'Operations': 'module.cooperative',
+  'Analytics': 'module.cooperative',
+  'Portals': 'module.cooperative',
+  'Water Station': 'module.water-station',
+  'Clinic': 'module.clinic',
+  'Laundry': 'module.laundry',
+  'Driving School': 'module.driving-school',
+  'Crispy King': 'module.fastfood',
+}
+
+/**
  * Generate navigation sections from EntityRegistry metadata.
- * Reactive — re-computes when entities change (e.g., feature flag toggles).
+ * Filters by feature flags — only enabled modules appear.
  */
 export function useDynamicNav(): DynamicNavSection[] {
   return useMemo(() => {
@@ -97,10 +127,28 @@ export function useDynamicNav(): DynamicNavSection[] {
       })
     }
 
+    // Filter groups by feature flags
+    const enabledGroups = new Map<string, DynamicNavItem[]>()
+    for (const [group, items] of groups.entries()) {
+      const flagKey = NAV_GROUP_FLAGS[group]
+      if (!flagKey || featureFlags.isEnabled(flagKey)) {
+        enabledGroups.set(group, items)
+      }
+    }
+
+    // Inject static group items (Dashboard, Reports) into enabled groups
+    for (const [group, staticItems] of Object.entries(STATIC_GROUP_ITEMS)) {
+      const flagKey = NAV_GROUP_FLAGS[group]
+      if (!flagKey || featureFlags.isEnabled(flagKey)) {
+        const existing = enabledGroups.get(group) ?? []
+        enabledGroups.set(group, [...staticItems, ...existing])
+      }
+    }
+
     // Build sections sorted by group name, items sorted by navOrder
     const sections: DynamicNavSection[] = [
       ...STATIC_NAV,
-      ...Array.from(groups.entries())
+      ...Array.from(enabledGroups.entries())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([label, items]) => ({
           label,

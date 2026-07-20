@@ -19,6 +19,8 @@ export interface BaseEntity {
   id: EntityId
   /** Tenant isolation — every entity belongs to a tenant */
   tenantId: string
+  /** Optional branch isolation — for multi-branch cooperatives */
+  branchId?: string
   /** Created timestamp (set once) */
   createdAt: TimestampMillis
   /** Updated timestamp (bumped on every change) */
@@ -142,6 +144,8 @@ export interface ChangeLogEntry {
   operation: 'create' | 'update' | 'delete'
   data: Record<string, unknown>
   previousData?: Record<string, unknown>
+  /** For delta sync: only fields that changed (if empty, full entity is sent) */
+  changedFields?: string[]
   timestamp: TimestampMillis
   clientId: string
   tenantId: string
@@ -180,6 +184,8 @@ export interface SyncStatusInfo {
   online: boolean
   pendingChanges: number
   lastSyncAt: TimestampMillis | null
+  /** Last successful push timestamp — used to avoid re-pulling own changes */
+  lastPushAt: TimestampMillis | null
   lastSyncStatus: 'success' | 'error' | 'in-progress'
   conflicts: number
   failedChanges: number

@@ -40,13 +40,16 @@ export interface SyncEngineConfig {
   changeLogRepo: Repository<ChangeLogEntry & BaseEntity>
   /** Repositories keyed by entity name */
   getRepository: (entityName: string) => Repository<any>
+  /** Persistent client ID — used to avoid re-pulling own changes */
+  clientId?: string
 }
 
 export class OfflineSyncEngine implements SyncEngine {
   private status: SyncStatusInfo = {
-    online: navigator.onLine,
+    online: typeof navigator !== 'undefined' ? navigator.onLine : true,
     pendingChanges: 0,
     lastSyncAt: null,
+    lastPushAt: null,
     lastSyncStatus: 'success',
     conflicts: 0,
     failedChanges: 0,
@@ -65,24 +68,32 @@ export class OfflineSyncEngine implements SyncEngine {
       batchSize: 50,
       retry: {},
       getAuthToken: async () => null,
+      clientId: 'server',
       ...config,
     }
 
     // Start polling
     this.startPolling()
 
-    // Listen for online/offline
-    window.addEventListener('online', () => {
-      this.updateStatus({ online: true })
-      this.triggerSync()
-    })
-    window.addEventListener('offline', () => {
-      this.updateStatus({ online: false })
-      this.stopPolling()
-    })
+    // Listen for online/offline (browser-only)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => {
+        this.updateStatus({ online: true })
+        this.triggerSync()
+      })
+      window.addEventListener('offline', () => {
+        this.updateStatus({ online: false })
+        this.stopPolling()
+      })
+    }
   }
 
   // ─── Private Helpers ───────────────────────────────────
+
+  private get online(): boolean {
+    if (typeof navigator !== 'undefined') return navigator.onLine
+    return true // Assume online in non-browser environments
+  }
 
   private updateStatus(partial: Partial<SyncStatusInfo>): void {
     this.status = { ...this.status, ...partial }
@@ -103,7 +114,7 @@ export class OfflineSyncEngine implements SyncEngine {
   private startPolling(): void {
     if (this.pollTimer) return
     this.pollTimer = setInterval(() => {
-      if (navigator.onLine && !this.syncing) {
+      if (this.online && !this.syncing) {
         this.sync().catch(() => {})
       }
     }, this.config.pollIntervalMs)
@@ -117,9 +128,8 @@ export class OfflineSyncEngine implements SyncEngine {
   }
 
   private async triggerSync(): Promise<void> {
-    // Debounce: wait a moment then sync
     await new Promise((r) => setTimeout(r, 1000))
-    if (navigator.onLine) {
+    if (this.online) {
       await this.sync().catch(() => {})
     }
   }
@@ -206,6 +216,11 @@ export class OfflineSyncEngine implements SyncEngine {
       result.conflicts = serverResult.conflicts
       result.errors = serverResult.errors
 
+      // ─── Gap 4: Record last push timestamp ──────────────────
+      if (result.syncedCount > 0) {
+        this.updateStatus({ lastPushAt: Date.now() })
+      }
+
       // Update pending count
       const countResponse = await this.config.changeLogRepo.count({
         filter: [{ field: 'status', operator: 'eq', value: 'pending' }],
@@ -236,9 +251,11 @@ export class OfflineSyncEngine implements SyncEngine {
 
     try {
       const lastSync = this.status.lastSyncAt ?? 0
+      const clientId = this.config.clientId ?? 'unknown'
 
+      // ─── Gap 4: Exclude own changes from pull ────────────
       const response = await fetch(
-        `${this.config.apiBaseUrl}/sync/pull?since=${lastSync}`,
+        `${this.config.apiBaseUrl}/sync/pull?since=${lastSync}&excludeClient=${encodeURIComponent(clientId)}`,
         { headers: await this.getHeaders() },
       )
 

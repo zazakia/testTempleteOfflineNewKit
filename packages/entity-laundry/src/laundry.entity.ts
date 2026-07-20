@@ -18,6 +18,7 @@ import type {
   LaundryOrder,
   LaundryPayment,
   LaundryInventory,
+  PromoCode,
 } from './laundry.schema'
 
 // ─── Customer Entity ───────────────────────────────────────
@@ -195,3 +196,28 @@ export const LaundryInventoryEntity: EntityDefinition<LaundryInventory> = {
 }
 
 EntityRegistry.register(LaundryInventoryEntity)
+
+// ─── Promo Code Entity ────────────────────────────────────
+
+export const PromoCodeEntity: EntityDefinition<PromoCode> = {
+  name: 'laundry_promo_codes',
+  ui: {
+    label: 'Promo Code',
+    labelPlural: 'Promo Codes',
+    icon: 'Ticket',
+    routePath: 'laundry/promos',
+    color: 'green',
+    showInNav: true,
+    navOrder: 35,
+    navGroup: 'Laundry',
+  },
+  sync: { enabled: true, conflictStrategy: 'lww', priority: 'normal' },
+  audit: { enabled: true },
+  rbac: { enabled: true, permissionPrefix: 'laundry_promo' },
+  hooks: {},
+  pagination: 'offset',
+  tenant: { enabled: true, field: 'tenantId' },
+  softDelete: { enabled: true, field: 'deletedAt' },
+}
+
+EntityRegistry.register(PromoCodeEntity)

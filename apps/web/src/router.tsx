@@ -77,16 +77,32 @@ import { CreateChangelogEntryPage } from './routes/changelog/new'
 import { ChangelogDetailPage } from './routes/changelog/$id'
 
 // Laundry Shop Management System
+import { LaundryDashboardPage } from './routes/laundry/dashboard'
 import { LaundryCustomersPage } from './routes/laundry/customers/index'
+import { CreateLaundryCustomerPage } from './routes/laundry/customers/new'
+import { LaundryCustomerDetailPage } from './routes/laundry/customers/$id'
 import { LaundryOrdersPage } from './routes/laundry/orders/index'
+import { CreateLaundryOrderPage } from './routes/laundry/orders/new'
+import { LaundryOrderDetailPage } from './routes/laundry/orders/$id'
 import { LaundryServicesPage } from './routes/laundry/services/index'
 import { LaundryPaymentsPage } from './routes/laundry/payments/index'
 import { LaundryInventoryPage } from './routes/laundry/inventory/index'
+import { LaundryReportsPage } from './routes/laundry/reports'
+import { CreateLaundryServicePage } from './routes/laundry/services/new'
+import { CreateLaundryInventoryPage } from './routes/laundry/inventory/new'
+import { LaundryPromosPage } from './routes/laundry/promos'
+import { LaundryCashReconciliationPage } from './routes/laundry/cash-reconciliation'
 
 // Driving School Management System
 import { DrivingStudentsPage } from './routes/driving-school/students/index'
 import { DrivingEnrollmentsPage } from './routes/driving-school/enrollments/index'
 import { DrivingCoursesPage } from './routes/driving-school/courses/index'
+
+// Crispy King Fast Food
+import { FastFoodMenuPage } from './routes/fastfood/menu/index'
+import { FastFoodOrdersPage } from './routes/fastfood/orders/index'
+import { FastFoodInventoryPage } from './routes/fastfood/inventory/index'
+import { FastFoodDailySalesPage } from './routes/fastfood/daily-sales/index'
 
 import { PayrollPage } from './routes/payroll/index'
 import { GovernancePage } from './routes/governance/index'
@@ -416,11 +432,21 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: 'clinic/doctors', component: ClinicPatientsPage }),
 
   // ─── Laundry Shop System ───────────────────────────────────
-  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/customers', component: LaundryCustomersPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry', component: LaundryDashboardPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'laundry/orders', component: LaundryOrdersPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/orders/new', component: CreateLaundryOrderPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/orders/$id', component: LaundryOrderDetailPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/customers', component: LaundryCustomersPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/customers/new', component: CreateLaundryCustomerPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/customers/$id', component: LaundryCustomerDetailPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'laundry/services', component: LaundryServicesPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'laundry/payments', component: LaundryPaymentsPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'laundry/inventory', component: LaundryInventoryPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/reports', component: LaundryReportsPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/services/new', component: CreateLaundryServicePage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/inventory/new', component: CreateLaundryInventoryPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/promos', component: LaundryPromosPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'laundry/cash-reconciliation', component: LaundryCashReconciliationPage }),
 
   // ─── Driving School System ─────────────────────────────────
   createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/students', component: DrivingStudentsPage }),
@@ -430,6 +456,12 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/payments', component: DrivingStudentsPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/instructors', component: DrivingStudentsPage }),
   createRoute({ getParentRoute: () => rootRoute, path: 'driving-school/vehicles', component: DrivingStudentsPage }),
+
+  // ─── Crispy King Fast Food ────────────────────────────────
+  createRoute({ getParentRoute: () => rootRoute, path: 'fastfood/menu', component: FastFoodMenuPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'fastfood/orders', component: FastFoodOrdersPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'fastfood/inventory', component: FastFoodInventoryPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: 'fastfood/daily-sales', component: FastFoodDailySalesPage }),
 ])
 
 // ─── Router Instance ─────────────────────────────────────────

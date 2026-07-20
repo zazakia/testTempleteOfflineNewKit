@@ -25,12 +25,14 @@ import type {
 } from '@repo/entity-clinic'
 import type { Branch } from '@repo/entity-branch'
 import type { ChangelogEntry } from '@repo/entity-changelog'
+import type { MenuItem, Order, OrderItem, InventoryItem, DailySales } from '@repo/entity-fastfood'
 import type {
   LaundryCustomer,
   LaundryService,
   LaundryOrder,
   LaundryPayment,
   LaundryInventory,
+  PromoCode,
 } from '@repo/entity-laundry'
 import type {
   DrivingStudent,
@@ -56,6 +58,7 @@ import '@repo/entity-branch'          // ← Multi-Branch Management
 import '@repo/entity-changelog'       // ← Changelog / Roadmap
 import '@repo/entity-laundry'         // ← Laundry Shop Multi-Branch
 import '@repo/entity-driving-school'  // ← Driving School Multi-Branch
+import '@repo/entity-fastfood'        // ← Crispy King Fast Food
 
 // ─── Tenant Context Factory ──────────────────────────────────
 // Reads current auth state to provide tenant isolation context.
@@ -183,6 +186,7 @@ export const laundryServiceRepo: Repository<LaundryService> = createRepo<Laundry
 export const laundryOrderRepo: Repository<LaundryOrder> = createRepo<LaundryOrder>('laundry_orders')
 export const laundryPaymentRepo: Repository<LaundryPayment> = createRepo<LaundryPayment>('laundry_payments')
 export const laundryInventoryRepo: Repository<LaundryInventory> = createRepo<LaundryInventory>('laundry_inventory')
+export const laundryPromoCodeRepo: Repository<PromoCode> = createRepo<PromoCode>('laundry_promo_codes')
 
 // ─── Driving School System ───────────────────────────────────
 export const drivingStudentRepo: Repository<DrivingStudent> = createRepo<DrivingStudent>('driving_students')
@@ -192,6 +196,13 @@ export const drivingEnrollmentRepo: Repository<DrivingEnrollment> = createRepo<D
 export const drivingScheduleRepo: Repository<DrivingSchedule> = createRepo<DrivingSchedule>('driving_schedules')
 export const drivingPaymentRepo: Repository<DrivingPayment> = createRepo<DrivingPayment>('driving_payments')
 export const drivingVehicleRepo: Repository<DrivingVehicle> = createRepo<DrivingVehicle>('driving_vehicles')
+
+// ─── Crispy King Fast Food ───────────────────────────────────
+export const ckMenuItemRepo: Repository<MenuItem> = createRepo<MenuItem>('ck_menu_items')
+export const ckOrderRepo: Repository<Order> = createRepo<Order>('ck_orders')
+export const ckOrderItemRepo: Repository<OrderItem> = createRepo<OrderItem>('ck_order_items')
+export const ckInventoryRepo: Repository<InventoryItem> = createRepo<InventoryItem>('ck_inventory')
+export const ckDailySalesRepo: Repository<DailySales> = createRepo<DailySales>('ck_daily_sales')
 
 // ─── Expose repos for runtime testing (console / E2E) ────────
 if (typeof window !== 'undefined') {
@@ -244,6 +255,7 @@ if (typeof window !== 'undefined') {
     laundryOrderRepo,
     laundryPaymentRepo,
     laundryInventoryRepo,
+    laundryPromoCodeRepo,
     // Driving School System
     drivingStudentRepo,
     drivingInstructorRepo,
@@ -252,6 +264,8 @@ if (typeof window !== 'undefined') {
     drivingScheduleRepo,
     drivingPaymentRepo,
     drivingVehicleRepo,
+    // Crispy King Fast Food
+    ckMenuItemRepo, ckOrderRepo, ckOrderItemRepo, ckInventoryRepo, ckDailySalesRepo,
   }
 }
 

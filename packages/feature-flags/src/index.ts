@@ -110,8 +110,12 @@ class FeatureFlagManager {
 export const featureFlags = new FeatureFlagManager()
 
 // ─── Default Flags ───────────────────────────────────────
+// Module Flags: Each business client system has its own on/off toggle.
+// For a single-client deployment (e.g., laundry only), set only that
+// module to enabled:true and all others to enabled:false.
 
 featureFlags.defineMany([
+  // ═══ Infrastructure (always ON) ═══
   {
     key: 'sync.enabled',
     description: 'Enable background sync',
@@ -140,7 +144,6 @@ featureFlags.defineMany([
     key: 'export.pdf',
     description: 'Enable PDF export',
     enabled: false,
-    rules: [{ target: 'tenant', values: ['enterprise-tenant'] }],
   },
   {
     key: 'multi-tenant',
@@ -149,10 +152,16 @@ featureFlags.defineMany([
     default: true,
   },
   {
-    key: 'customer.bulk-import',
-    description: 'Enable bulk import for customers',
-    enabled: false,
-    rules: [{ target: 'percentage', percentage: 50 }],
+    key: 'module.multi-branch',
+    description: 'Enable multi-branch support (branch entities, branch filtering, per-branch reports)',
+    enabled: true,
+    default: true,
+  },
+  {
+    key: 'module.changelog',
+    description: 'Enable application changelog / roadmap module',
+    enabled: true,
+    default: true,
   },
   {
     key: 'debug.error-details',
@@ -160,12 +169,57 @@ featureFlags.defineMany([
     enabled: true,
     rules: [{ target: 'environment', environments: ['development'] }],
   },
+
+  // ═══ Cooperative ERP Modules ═══
+  {
+    key: 'module.cooperative',
+    description: 'Enable Cooperative ERP (members, loans, savings, share capital, accounting, collections, governance)',
+    enabled: false,
+    default: false,
+  },
+  {
+    key: 'module.customer',
+    description: 'Enable legacy Customer CRM',
+    enabled: false,
+    default: false,
+  },
+
+  // ═══ Business Client Systems ═══
+  {
+    key: 'module.laundry',
+    description: 'Enable Laundry Shop Management System (customers, orders, services, payments, inventory, multi-branch)',
+    enabled: true,
+    default: true,
+  },
   {
     key: 'module.clinic',
     description: 'Enable Clinic Management System (patients, doctors, appointments, billing)',
-    enabled: true,
-    default: true,
-    // To restrict to specific clinic tenants only:
-    // rules: [{ target: 'tenant', values: ['clinic-tenant-id-1', 'clinic-tenant-id-2'] }],
+    enabled: false,
+    default: false,
+  },
+  {
+    key: 'module.driving-school',
+    description: 'Enable Driving School Management System (students, instructors, courses, enrollments, schedules, payments, vehicles)',
+    enabled: false,
+    default: false,
+  },
+  {
+    key: 'module.fastfood',
+    description: 'Enable Crispy King Fast Food POS (menu, orders, inventory, daily sales)',
+    enabled: false,
+    default: false,
+  },
+  {
+    key: 'module.water-station',
+    description: 'Enable Water Station Management System',
+    enabled: false,
+    default: false,
+  },
+
+  // ═══ Other Features ═══
+  {
+    key: 'customer.bulk-import',
+    description: 'Enable bulk import for customers',
+    enabled: false,
   },
 ])

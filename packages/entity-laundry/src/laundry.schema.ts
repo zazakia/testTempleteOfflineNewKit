@@ -630,3 +630,115 @@ export const INVENTORY_STATUS_COLORS: Record<string, 'green' | 'yellow' | 'red' 
   out_of_stock: 'red',
   discontinued: 'gray',
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Promo Codes — Section 9 (Loyalty & Promotions)
+// ═══════════════════════════════════════════════════════════════
+
+export type PromoType = 'discount_percent' | 'discount_amount' | 'free_delivery' | 'bonus_points' | 'volume_discount' | 'free_item'
+export type PromoStatus = 'active' | 'expired' | 'scheduled' | 'paused'
+export type PromoTarget = 'all_customers' | 'new_customers' | 'tier_specific' | 'referral' | 'birthday' | 'seasonal'
+
+export interface PromoCode {
+  id: string
+  tenantId: string
+  branchId?: string
+  /** If set, applies only to these branches. If null/empty, applies to ALL branches */
+  branchIds?: string[]
+  /** Unique promo code customers enter (e.g. "SUMMER20") */
+  code: string
+  /** Display name */
+  name: string
+  description?: string
+  promoType: PromoType
+  /** Discount percent (for discount_percent) or points amount (for bonus_points) */
+  value: number
+  /** Minimum order amount to qualify */
+  minOrderAmount: number
+  /** Maximum discount cap (for discount_percent type) */
+  maxDiscountCap?: number
+  target: PromoTarget
+  /** For tier_specific: which tiers can use this */
+  eligibleTiers?: string[]
+  status: PromoStatus
+  /** Usage limits */
+  maxUses: number
+  currentUses: number
+  maxUsesPerCustomer: number
+  /** For free_item type: buy this many, get free items (e.g. 10 = buy 10 get 1 free) */
+  freeItemThreshold?: number
+  /** For free_item type: how many items are free (default 1) */
+  freeItemCount?: number
+  /** Validity period */
+  startsAt: number
+  endsAt: number
+  /** For seasonal: e.g. "Christmas 2026", "Summer Promo" */
+  campaign?: string
+  notes?: string
+
+  createdAt: number
+  updatedAt: number
+  deletedAt: number | null
+  version: number
+  createdBy: string
+  updatedBy: string
+}
+
+export const PromoTypeSchema = z.enum(['discount_percent','discount_amount','free_delivery','bonus_points','volume_discount','free_item'])
+export const PromoStatusSchema = z.enum(['active','expired','scheduled','paused'])
+export const PromoTargetSchema = z.enum(['all_customers','new_customers','tier_specific','referral','birthday','seasonal'])
+
+export const CreatePromoCodeSchema = z.object({
+  tenantId: z.string().min(1),
+  branchId: z.string().optional(),
+  branchIds: z.array(z.string()).optional(),
+  code: z.string().min(1).max(20).regex(/^[A-Z0-9]+$/, 'Must be uppercase letters and numbers only'),
+  name: z.string().min(1).max(200),
+  description: z.string().max(500).optional(),
+  promoType: PromoTypeSchema,
+  value: z.number().min(0),
+  minOrderAmount: z.number().min(0).default(0),
+  maxDiscountCap: z.number().min(0).optional(),
+  target: PromoTargetSchema.default('all_customers'),
+  eligibleTiers: z.array(z.string()).optional(),
+  status: PromoStatusSchema.default('active'),
+  maxUses: z.number().int().min(1).default(100),
+  currentUses: z.number().int().default(0),
+  maxUsesPerCustomer: z.number().int().min(1).default(1),
+  freeItemThreshold: z.number().int().min(1).optional(),
+  freeItemCount: z.number().int().min(1).default(1).optional(),
+  startsAt: z.number().positive(),
+  endsAt: z.number().positive(),
+  campaign: z.string().max(100).optional(),
+  notes: notesSchema,
+})
+
+export const UpdatePromoCodeSchema = createUpdateSchema({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(500).optional(),
+  value: z.number().min(0).optional(),
+  minOrderAmount: z.number().min(0).optional(),
+  maxDiscountCap: z.number().min(0).optional(),
+  status: PromoStatusSchema.optional(),
+  maxUses: z.number().int().min(1).optional(),
+  endsAt: z.number().positive().optional(),
+  notes: notesSchema.optional(),
+})
+
+export const PROMO_TYPE_LABELS: Record<PromoType, string> = {
+  discount_percent: 'Discount %',
+  discount_amount: 'Discount Amount',
+  free_delivery: 'Free Delivery',
+  bonus_points: 'Bonus Points',
+  volume_discount: 'Volume Discount',
+  free_item: 'Free Item (e.g. 10+1)',
+}
+
+export const PROMO_STATUS_LABELS: Record<PromoStatus, string> = {
+  active: 'Active', expired: 'Expired', scheduled: 'Scheduled', paused: 'Paused',
+}
+
+export const PROMO_TARGET_LABELS: Record<PromoTarget, string> = {
+  all_customers: 'All Customers', new_customers: 'New Customers', tier_specific: 'Tier-Specific',
+  referral: 'Referral Bonus', birthday: 'Birthday Promo', seasonal: 'Seasonal Campaign',
+}

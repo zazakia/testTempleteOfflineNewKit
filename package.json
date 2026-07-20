@@ -32,6 +32,8 @@
     "pnpm": ">=9.0.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.2"
+    "@supabase/supabase-js": "^2.110.2",
+    "docx": "^9.7.1",
+    "pg": "^8.22.0"
   }
 }

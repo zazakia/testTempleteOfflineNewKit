@@ -22,6 +22,7 @@
     "@repo/entity-customer": "workspace:*",
     "@repo/entity-laundry": "workspace:*",
     "@repo/entity-driving-school": "workspace:*",
+    "@repo/entity-fastfood": "workspace:*",
     "@repo/feature-flags": "workspace:*",
     "@repo/multi-tenant": "workspace:*",
     "@repo/ui-core": "workspace:*",

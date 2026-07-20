@@ -15,6 +15,7 @@ export {
   LaundryOrderEntity,
   LaundryPaymentEntity,
   LaundryInventoryEntity,
+  PromoCodeEntity,
 } from './laundry.entity'
 
 // ─── LaundryCustomer ───────────────────────────────────────
@@ -102,6 +103,19 @@ export {
   INVENTORY_CATEGORY_LABELS,
   INVENTORY_STATUS_LABELS,
   INVENTORY_STATUS_COLORS,
+} from './laundry.schema'
+
+// ─── Promo Codes ───────────────────────────────────────────
+export type { PromoCode, PromoType, PromoStatus, PromoTarget } from './laundry.schema'
+export {
+  CreatePromoCodeSchema,
+  UpdatePromoCodeSchema,
+  PromoTypeSchema,
+  PromoStatusSchema,
+  PromoTargetSchema,
+  PROMO_TYPE_LABELS,
+  PROMO_STATUS_LABELS,
+  PROMO_TARGET_LABELS,
 } from './laundry.schema'
 
 // ─── Services ──────────────────────────────────────────────

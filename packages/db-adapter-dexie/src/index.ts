@@ -194,6 +194,30 @@ class OfflineDatabase extends Dexie {
       driving_vehicles: 'id, tenantId, branchId, vehicleCode, plateNumber, make, model, year, type, transmission, fuelType, ltoRegistrationExpiry, odometerReading, assignedInstructorId, hasDualControl, status, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+branchId], [tenantId+status], [vehicleCode], [plateNumber], [assignedInstructorId]',
     })
 
+    // ─── v7: Crispy King Fast Food ───────────────────────
+    // Added 2026-07: Fast food POS with multi-branch support
+    this.version(7).stores({
+      // Menu items — product catalog
+      ck_menu_items: 'id, tenantId, branchId, itemCode, name, category, price, status, sortOrder, isFeatured, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+category], [branchId+status], [itemCode]',
+
+      // Orders — customer transactions
+      ck_orders: 'id, tenantId, branchId, orderNumber, orderType, status, customerName, totalAmount, paymentMethod, cashierName, orderedAt, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [branchId+status], [branchId+orderedAt], [orderNumber]',
+
+      // Order items — line items
+      ck_order_items: 'id, tenantId, branchId, orderId, menuItemId, menuItemCode, quantity, unitPrice, totalPrice, createdAt, updatedAt, deletedAt, [orderId], [menuItemId]',
+
+      // Inventory — stock tracking per branch
+      ck_inventory: 'id, tenantId, branchId, name, category, quantityOnHand, reorderPoint, status, supplier, lastRestockedAt, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [branchId+status], [branchId+category]',
+
+      // Daily sales — end-of-day summaries
+      ck_daily_sales: 'id, tenantId, branchId, salesDate, grossSales, netSales, orderCount, isClosed, preparedBy, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [branchId+salesDate], [salesDate]',
+    })
+
+    // ─── v8: Laundry Promo Codes ─────────────────────────
+    this.version(8).stores({
+      laundry_promo_codes: 'id, tenantId, code, promoType, status, target, startsAt, endsAt, currentUses, maxUses, campaign, createdAt, updatedAt, deletedAt, [tenantId+deletedAt], [tenantId+status], [code]',
+    })
+
     this.changeLog = this.table('changeLog')
   }
 }

@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+dist/
+*.jks
+*.keystore
+*.hbc.map
+.metro-health-check*
+android/
+ios/

@@ -1,6 +1,10 @@
 /**
- * ─── Server-Side Data Store ─────────────────────────────────
+ * ─── Server-Side Data Store (Production) ─────────────────────
  * Uses Supabase PostgreSQL when configured, falls back to in-memory.
+ *
+ * Enhancements:
+ *  - Gap 4: excludeClient filtering on getChangesSince
+ *  - Gap 6: Wired sync_queue for async job processing
  */
 
 import type { ChangeLogEntry, EntityId, TimestampMillis } from '@repo/core'
@@ -17,11 +21,26 @@ export interface ServerEntity {
   deletedAt: TimestampMillis | null
 }
 
+export interface SyncQueueJob {
+  id: string
+  tenantId: string
+  entityType: string
+  entityId: string
+  operation: string
+  payload: Record<string, unknown>
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  createdAt: number
+  processedAt: number | null
+  error: string | null
+  clientId: string
+}
+
 // ─── In-Memory Fallback ──────────────────────────────────
 
 class InMemoryStore {
   private entities = new Map<string, ServerEntity>()
   private changeLog: ChangeLogEntry[] = []
+  private syncQueue: SyncQueueJob[] = []
 
   upsertEntity(type: string, data: Record<string, unknown>, tenantId: string): ServerEntity {
     const id = data.id as string
@@ -53,9 +72,18 @@ class InMemoryStore {
     return this.entities.get(id)
   }
 
-  getChangesSince(since: TimestampMillis, tenantId: string): ChangeLogEntry[] {
+  getChangesSince(
+    since: TimestampMillis,
+    tenantId: string,
+    excludeClient?: string,
+  ): ChangeLogEntry[] {
     return this.changeLog
-      .filter((c) => c.timestamp > since && c.tenantId === tenantId)
+      .filter((c) => {
+        if (c.timestamp <= since) return false
+        if (c.tenantId !== tenantId) return false
+        if (excludeClient && c.clientId === excludeClient) return false
+        return true
+      })
       .sort((a, b) => a.timestamp - b.timestamp)
   }
 
@@ -63,6 +91,59 @@ class InMemoryStore {
     this.changeLog.push(entry)
     if (this.changeLog.length > 10000) {
       this.changeLog.splice(0, this.changeLog.length - 10000)
+    }
+  }
+
+  enqueueSyncJob(change: ChangeLogEntry): SyncQueueJob {
+    const job: SyncQueueJob = {
+      id: change.id,
+      tenantId: change.tenantId,
+      entityType: change.entityType,
+      entityId: change.entityId,
+      operation: change.operation,
+      payload: { ...change.data, previousData: change.previousData },
+      status: 'pending',
+      createdAt: Date.now(),
+      processedAt: null,
+      error: null,
+      clientId: change.clientId,
+    }
+    this.syncQueue.push(job)
+    // Keep queue bounded
+    if (this.syncQueue.length > 10000) {
+      this.syncQueue.splice(0, this.syncQueue.length - 10000)
+    }
+    return job
+  }
+
+  async processSyncQueue(): Promise<{ processed: number; failed: number }> {
+    let processed = 0
+    let failed = 0
+    const pending = this.syncQueue.filter((j) => j.status === 'pending')
+    for (const job of pending) {
+      try {
+        job.status = 'processing'
+        // In a real system, this would trigger async handlers
+        // For in-memory, we just mark as completed immediately
+        job.status = 'completed'
+        job.processedAt = Date.now()
+        processed++
+      } catch (err: any) {
+        job.status = 'failed'
+        job.error = err.message
+        failed++
+      }
+    }
+    return { processed, failed }
+  }
+
+  getSyncQueueHealth() {
+    return {
+      pending: this.syncQueue.filter((j) => j.status === 'pending').length,
+      processing: this.syncQueue.filter((j) => j.status === 'processing').length,
+      completed: this.syncQueue.filter((j) => j.status === 'completed').length,
+      failed: this.syncQueue.filter((j) => j.status === 'failed').length,
+      total: this.syncQueue.length,
     }
   }
 
@@ -76,6 +157,7 @@ class InMemoryStore {
       status: 'healthy',
       entities: this.entities.size,
       changeLogEntries: this.changeLog.length,
+      syncQueueJobs: this.syncQueue.length,
       uptime: process.uptime(),
     }
   }
@@ -92,7 +174,6 @@ class SupabaseStore {
     const id = data.id as string
     const now = Date.now()
 
-    // Try to find existing
     const { data: existing } = await supabaseAdmin!
       .from('sync_entities')
       .select('*')
@@ -156,13 +237,21 @@ class SupabaseStore {
   async getChangesSince(
     since: TimestampMillis,
     tenantId: string,
+    excludeClient?: string,
   ): Promise<ChangeLogEntry[]> {
-    const { data, error } = await supabaseAdmin!
+    let query = supabaseAdmin!
       .from('change_log')
       .select('*')
       .eq('tenant_id', tenantId)
       .gt('timestamp', new Date(since).toISOString())
       .order('timestamp', { ascending: true })
+
+    // ─── Gap 4: Exclude own client's changes ──────────────────
+    if (excludeClient) {
+      query = query.neq('client_id', excludeClient)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error('[SupabaseStore] getChangesSince failed:', error.message)
@@ -177,6 +266,7 @@ class SupabaseStore {
       operation: row.operation,
       data: row.data,
       previousData: row.previous_data,
+      changedFields: row.changed_fields ?? undefined,
       timestamp: new Date(row.timestamp).getTime(),
       clientId: row.client_id,
       performedBy: row.performed_by,
@@ -194,14 +284,38 @@ class SupabaseStore {
       operation: entry.operation,
       data: entry.data,
       previous_data: entry.previousData ?? null,
+      changed_fields: entry.changedFields ?? null,
       timestamp: new Date(entry.timestamp).toISOString(),
       client_id: entry.clientId,
       performed_by: entry.performedBy,
       status: 'synced',
+      retry_count: entry.retryCount,
     })
 
     if (error) {
       console.error('[SupabaseStore] appendChangeLog failed:', error.message)
+    }
+  }
+
+  async enqueueSyncJob(change: ChangeLogEntry): Promise<void> {
+    const now = new Date().toISOString()
+    const { error } = await supabaseAdmin!.from('sync_queue').upsert(
+      {
+        id: change.id,
+        tenant_id: change.tenantId,
+        entity_type: change.entityType,
+        entity_id: change.entityId,
+        operation: change.operation,
+        payload: { ...change.data, previousData: change.previousData, changedFields: change.changedFields },
+        status: 'pending',
+        created_at: now,
+        client_id: change.clientId,
+      },
+      { onConflict: 'id' },
+    )
+
+    if (error) {
+      console.error('[SupabaseStore] enqueueSyncJob failed:', error.message)
     }
   }
 
@@ -211,14 +325,20 @@ class SupabaseStore {
 
   async getHealth() {
     try {
-      const { count } = await supabaseAdmin!
+      const { count: entityCount } = await supabaseAdmin!
         .from('sync_entities')
         .select('*', { count: 'exact', head: true })
+
+      const { count: queueCount } = await supabaseAdmin!
+        .from('sync_queue')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
 
       return {
         backend: 'supabase',
         status: 'healthy',
-        entities: count ?? 0,
+        entities: entityCount ?? 0,
+        syncQueuePending: queueCount ?? 0,
         uptime: process.uptime(),
       }
     } catch (err) {
@@ -255,14 +375,20 @@ export const serverStore = {
   async getChangesSince(
     since: TimestampMillis,
     tenantId: string,
+    excludeClient?: string,
   ): Promise<ChangeLogEntry[]> {
-    if (supabaseStore) return supabaseStore.getChangesSince(since, tenantId)
-    return inMemory.getChangesSince(since, tenantId)
+    if (supabaseStore) return supabaseStore.getChangesSince(since, tenantId, excludeClient)
+    return inMemory.getChangesSince(since, tenantId, excludeClient)
   },
 
   async appendChangeLog(entry: ChangeLogEntry): Promise<void> {
     if (supabaseStore) return supabaseStore.appendChangeLog(entry)
     return inMemory.appendChangeLog(entry)
+  },
+
+  async enqueueSyncJob(change: ChangeLogEntry): Promise<void> {
+    if (supabaseStore) return supabaseStore.enqueueSyncJob(change)
+    return Promise.resolve(inMemory.enqueueSyncJob(change)).then(() => {})
   },
 
   getServerTime(): TimestampMillis {
@@ -280,5 +406,4 @@ export const serverStore = {
   },
 }
 
-// Also export the standalone stores for direct access
 export { inMemory as inMemoryStore, supabaseStore }

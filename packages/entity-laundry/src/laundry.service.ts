@@ -337,6 +337,13 @@ export class LaundryInventoryService {
     }
     return updated
   }
+
+  /**
+   * Get items that need reordering (at or below min stock level).
+   */
+  static getLowStockItems(inventory: LaundryInventory[]): LaundryInventory[] {
+    return inventory.filter((i) => i.quantityOnHand <= i.minStockLevel && i.status !== 'discontinued')
+  }
 }
 
 export class LaundryPaymentService {
