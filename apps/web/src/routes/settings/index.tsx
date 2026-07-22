@@ -6,14 +6,16 @@
 import { useEffect, useState } from 'react'
 import { Card, CardHeader, Badge, Button, Input, Modal } from '@repo/ui-core'
 import { collectionGroupRepo, expenseCategoryRepo, employeeRepo, loanProductRepo } from '../../lib/db'
-import { Plus, Save, Layers, Tag, Users, Briefcase, Settings2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useAllFlags, useToggleFlag } from '../../context/FeatureFlagContext'
+import { Plus, Save, Layers, Tag, Users, Briefcase, Settings2, ChevronLeft, ChevronRight, Blocks } from 'lucide-react'
 
-type SettingsTab = 'collection-groups' | 'expense-categories' | 'employees' | 'loan-products'
+type SettingsTab = 'collection-groups' | 'expense-categories' | 'employees' | 'loan-products' | 'modules'
 
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('collection-groups')
 
   const tabs = [
+    { id: 'modules' as SettingsTab, label: 'Modules', icon: <Blocks className="h-4 w-4" /> },
     { id: 'collection-groups' as SettingsTab, label: 'Collection Groups', icon: <Layers className="h-4 w-4" /> },
     { id: 'expense-categories' as SettingsTab, label: 'Expense Categories', icon: <Tag className="h-4 w-4" /> },
     { id: 'employees' as SettingsTab, label: 'Employees', icon: <Users className="h-4 w-4" /> },
@@ -44,6 +46,7 @@ export function SettingsPage() {
           {activeTab === 'expense-categories' && <ExpenseCategoriesSettings />}
           {activeTab === 'employees' && <EmployeesSettings />}
           {activeTab === 'loan-products' && <LoanProductsSettings />}
+          {activeTab === 'modules' && <ModuleSettings />}
         </div>
       </div>
     </div>
@@ -263,5 +266,180 @@ function LoanProductsSettings() {
         </form>
       </Modal>
     </Card>
+  )
+}
+
+// ─── Modules Toggle ───────────────────────────────────────────
+
+interface ModuleDef {
+  flagKey: string
+  label: string
+  description: string
+  icon: string
+  category: 'core' | 'vertical'
+}
+
+const MODULES: ModuleDef[] = [
+  {
+    flagKey: 'module.cooperative',
+    label: 'Cooperative ERP',
+    description: 'Members, lending, savings, share capital, accounting & collections',
+    icon: 'Building2',
+    category: 'core',
+  },
+  {
+    flagKey: 'module.multi-branch',
+    label: 'Multi-Branch',
+    description: 'Branch entities, per-branch filtering and reports',
+    icon: 'GitBranch',
+    category: 'core',
+  },
+  {
+    flagKey: 'module.changelog',
+    label: 'Changelog / Roadmap',
+    description: 'Release version tracking & feature roadmap',
+    icon: 'Clock',
+    category: 'core',
+  },
+  {
+    flagKey: 'module.laundry',
+    label: 'Laundry Shop',
+    description: 'Multi-branch laundry: customers, orders, services, payments, inventory',
+    icon: 'Shirt',
+    category: 'vertical',
+  },
+  {
+    flagKey: 'module.clinic',
+    label: 'Clinic',
+    description: 'Patients, doctors, appointments, consultation records, billing',
+    icon: 'HeartPulse',
+    category: 'vertical',
+  },
+  {
+    flagKey: 'module.driving-school',
+    label: 'Driving School',
+    description: 'Students, instructors, courses, enrollments, schedules, payments, vehicles',
+    icon: 'Car',
+    category: 'vertical',
+  },
+  {
+    flagKey: 'module.fastfood',
+    label: 'Fast Food',
+    description: 'Menu, POS orders, inventory tracking, daily sales summary',
+    icon: 'UtensilsCrossed',
+    category: 'vertical',
+  },
+  {
+    flagKey: 'module.water-station',
+    label: 'Water Station',
+    description: 'Water delivery customers, deliveries, containers & payments',
+    icon: 'Droplets',
+    category: 'vertical',
+  },
+]
+
+function ModuleSettings() {
+  const allFlags = useAllFlags()
+  const toggle = useToggleFlag()
+
+  const flagsByKey = new Map(allFlags.map(f => [f.key, f]))
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader
+          title="Module Toggles"
+          description="Turn business domains on or off. Changes apply immediately to the sidebar and routes."
+        />
+
+        {/* Core Modules */}
+        <div className="mb-6">
+          <p className="mb-3 px-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Platform Features
+          </p>
+          <div className="space-y-1">
+            {MODULES.filter(m => m.category === 'core').map(mod => {
+              const flag = flagsByKey.get(mod.flagKey)
+              const enabled = flag?.resolved ?? flag?.enabled ?? false
+              return (
+                <div
+                  key={mod.flagKey}
+                  className="flex items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{mod.label}</p>
+                    <p className="text-xs text-gray-500">{mod.description}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={enabled}
+                    aria-label={`Toggle ${mod.label}`}
+                    onClick={() => toggle(mod.flagKey, !enabled)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                      enabled ? 'bg-green-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
+                        enabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Vertical Modules */}
+        <div>
+          <p className="mb-3 px-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Business Line Modules
+          </p>
+          <div className="space-y-1">
+            {MODULES.filter(m => m.category === 'vertical').map(mod => {
+              const flag = flagsByKey.get(mod.flagKey)
+              const enabled = flag?.resolved ?? flag?.enabled ?? false
+              return (
+                <div
+                  key={mod.flagKey}
+                  className="flex items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{mod.label}</p>
+                    <p className="text-xs text-gray-500">{mod.description}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={enabled}
+                    aria-label={`Toggle ${mod.label}`}
+                    onClick={() => toggle(mod.flagKey, !enabled)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                      enabled ? 'bg-green-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
+                        enabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </Card>
+
+      {/* Persistence note */}
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+        <p className="text-sm text-amber-800">
+          <strong>Note:</strong> Module toggles are stored in memory and reset on page reload.
+          In production, they persist per tenant via <code className="rounded bg-amber-100 px-1 text-xs">tenant_metadata</code>.
+        </p>
+      </div>
+    </div>
   )
 }

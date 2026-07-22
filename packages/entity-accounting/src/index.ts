@@ -4,3 +4,5 @@ export { CreateAccountSchema, CreateJournalEntrySchema, AccountTypeSchema, ACCOU
 export { AccountingService } from './accounting.service'
 export { ReportGenerator } from './accounting.reports'
 export type { TrialBalanceRow, IncomeStatementRow, BalanceSheetRow } from './accounting.reports'
+export { JournalEntryAggregate } from './journal.aggregate'
+export type { JournalLine } from './journal.aggregate'

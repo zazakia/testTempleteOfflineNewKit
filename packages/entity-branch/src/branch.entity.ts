@@ -24,7 +24,7 @@ export const BranchEntity: EntityDefinition<Branch> = {
     routePath: 'branches',
     color: 'purple',
     showInNav: true,
-    navOrder: 92,
+    navOrder: 10,
     navGroup: 'Administration',
   },
 

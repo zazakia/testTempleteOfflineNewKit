@@ -64,3 +64,6 @@ export type { DomainEvent, DomainEventType, EventHandler, EventSubscription } fr
 
 // i18n
 export { t, setLocale, getLocale } from './i18n'
+
+// Value Objects
+export { Money, DomainError } from './value-objects'

@@ -246,7 +246,7 @@ create table if not exists chart_of_accounts (
   deleted_at timestamptz, version int default 1
 );
 create index idx_coa_type on chart_of_accounts(tenant_id, account_type) where deleted_at is null;
-create unique index idx_coa_code on chart_of_accounts(tenant_id, code) where deleted_at is null;
+create unique index if not exists idx_coa_code on chart_of_accounts(tenant_id, code);
 
 -- ─── Journal Entries ────────────────────────────────────────
 create table if not exists journal_entries (

@@ -245,6 +245,63 @@ create unique index if not exists idx_driving_enrollments_code on driving_enroll
 
 alter table driving_enrollments enable row level security;
 
+-- ─── Driving Vehicles (Training Fleet) ───────────────────────
+-- NOTE: Must be created BEFORE driving_schedules since schedules reference vehicles
+create table if not exists driving_vehicles (
+  id text primary key default gen_random_uuid()::text,
+  tenant_id text not null references tenants(id) on delete cascade,
+  branch_id text references branches(id),
+
+  vehicle_code text not null,
+  plate_number text not null,
+  make text not null,
+  model text not null,
+  year integer not null,
+  type text not null check (type in ('sedan','hatchback','suv','pickup','van','truck','bus','motorcycle')),
+  transmission text not null check (transmission in ('manual','automatic','semi_automatic')),
+  fuel_type text not null check (fuel_type in ('gasoline','diesel','electric','hybrid')),
+  color text,
+  -- Registration
+  lto_registration_number text not null,
+  lto_registration_expiry date not null,
+  insurance_provider text,
+  insurance_policy_number text,
+  insurance_expiry_date date,
+  -- Training Equipment
+  has_dual_control boolean not null default true,
+  has_dash_cam boolean not null default false,
+  has_student_signage boolean not null default true,
+  -- Maintenance
+  odometer_reading integer not null default 0,
+  last_maintenance_date date,
+  last_maintenance_odometer integer,
+  next_maintenance_odometer integer,
+  maintenance_notes text,
+  -- Assignment
+  assigned_branch_id text references branches(id),
+  assigned_instructor_id text references driving_instructors(id),
+  -- Status
+  status text not null default 'active' check (status in ('active','maintenance','out_of_service','for_sale')),
+  acquisition_date date,
+  acquisition_cost numeric(12,2),
+  notes text,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz,
+  version int not null default 1,
+  created_by text not null default 'system',
+  updated_by text not null default 'system'
+);
+
+create index if not exists idx_driving_vehicles_tenant on driving_vehicles(tenant_id) where deleted_at is null;
+create index if not exists idx_driving_vehicles_branch on driving_vehicles(tenant_id, branch_id) where deleted_at is null;
+create index if not exists idx_driving_vehicles_status on driving_vehicles(tenant_id, status) where deleted_at is null;
+create unique index if not exists idx_driving_vehicles_code on driving_vehicles(tenant_id, vehicle_code) where deleted_at is null;
+create unique index if not exists idx_driving_vehicles_plate on driving_vehicles(tenant_id, plate_number) where deleted_at is null;
+
+alter table driving_vehicles enable row level security;
+
 -- ─── Driving Schedules ───────────────────────────────────────
 create table if not exists driving_schedules (
   id text primary key default gen_random_uuid()::text,
@@ -263,24 +320,18 @@ create table if not exists driving_schedules (
   start_time text not null,
   end_time text not null,
   duration_hours numeric(3,1) not null,
-  -- Topics
   topics_covered text,
   skills_practiced text,
-  -- Assessment
   assessment_score numeric(5,1),
   assessment_notes text,
-  -- Attendance
   student_attended boolean not null default false,
   instructor_confirmed boolean not null default false,
   attendance_confirmed_at timestamptz,
-  -- Location
   is_onsite boolean not null default true,
   location text,
-  -- Vehicle tracking
   odometer_start integer,
   odometer_end integer,
   fuel_used numeric(5,2),
-  -- Reschedule
   original_schedule_id text references driving_schedules(id),
   reschedule_reason text,
   reschedule_count integer not null default 0,
@@ -344,59 +395,3 @@ create index if not exists idx_driving_payments_date on driving_payments(tenant_
 create unique index if not exists idx_driving_payments_code on driving_payments(tenant_id, payment_code) where deleted_at is null;
 
 alter table driving_payments enable row level security;
-
--- ─── Driving Vehicles (Training Fleet) ───────────────────────
-create table if not exists driving_vehicles (
-  id text primary key default gen_random_uuid()::text,
-  tenant_id text not null references tenants(id) on delete cascade,
-  branch_id text references branches(id),
-
-  vehicle_code text not null,
-  plate_number text not null,
-  make text not null,
-  model text not null,
-  year integer not null,
-  type text not null check (type in ('sedan','hatchback','suv','pickup','van','truck','bus','motorcycle')),
-  transmission text not null check (transmission in ('manual','automatic','semi_automatic')),
-  fuel_type text not null check (fuel_type in ('gasoline','diesel','electric','hybrid')),
-  color text,
-  -- Registration
-  lto_registration_number text not null,
-  lto_registration_expiry date not null,
-  insurance_provider text,
-  insurance_policy_number text,
-  insurance_expiry_date date,
-  -- Training Equipment
-  has_dual_control boolean not null default true,
-  has_dash_cam boolean not null default false,
-  has_student_signage boolean not null default true,
-  -- Maintenance
-  odometer_reading integer not null default 0,
-  last_maintenance_date date,
-  last_maintenance_odometer integer,
-  next_maintenance_odometer integer,
-  maintenance_notes text,
-  -- Assignment
-  assigned_branch_id text references branches(id),
-  assigned_instructor_id text references driving_instructors(id),
-  -- Status
-  status text not null default 'active' check (status in ('active','maintenance','out_of_service','for_sale')),
-  acquisition_date date,
-  acquisition_cost numeric(12,2),
-  notes text,
-
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  deleted_at timestamptz,
-  version int not null default 1,
-  created_by text not null default 'system',
-  updated_by text not null default 'system'
-);
-
-create index if not exists idx_driving_vehicles_tenant on driving_vehicles(tenant_id) where deleted_at is null;
-create index if not exists idx_driving_vehicles_branch on driving_vehicles(tenant_id, branch_id) where deleted_at is null;
-create index if not exists idx_driving_vehicles_status on driving_vehicles(tenant_id, status) where deleted_at is null;
-create unique index if not exists idx_driving_vehicles_code on driving_vehicles(tenant_id, vehicle_code) where deleted_at is null;
-create unique index if not exists idx_driving_vehicles_plate on driving_vehicles(tenant_id, plate_number) where deleted_at is null;
-
-alter table driving_vehicles enable row level security;

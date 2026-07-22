@@ -27,8 +27,8 @@ export const CustomerEntity: EntityDefinition<Customer> = {
     routePath: 'customers',
     color: 'blue',
     showInNav: true,
-    navOrder: 10,
-    navGroup: 'CRM',
+    navOrder: 30,
+    navGroup: 'Cooperative',
   },
 
   sync: {

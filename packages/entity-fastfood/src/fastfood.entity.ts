@@ -1,6 +1,6 @@
 /**
  * ─── Fast Food Entity Definitions ────────────────────────────
- * Self-registers all 5 Crispy King entities on import.
+ * Self-registers all 5 Fast Food entities on import.
  */
 
 import { EntityRegistry } from '@repo/core'
@@ -8,7 +8,7 @@ import type { EntityDefinition } from '@repo/core'
 import type { MenuItem, Order, OrderItem, InventoryItem, DailySales } from './fastfood.schema'
 
 /**
- * Menu Item entity — the product catalog for Crispy King.
+ * Menu Item entity — the product catalog for Fast Food.
  */
 export const MenuItemEntity: EntityDefinition<MenuItem> = {
   name: 'ck_menu_items',
@@ -20,7 +20,7 @@ export const MenuItemEntity: EntityDefinition<MenuItem> = {
     color: 'yellow',
     showInNav: true,
     navOrder: 10,
-    navGroup: 'Crispy King',
+    navGroup: 'Fast Food',
   },
   sync: { enabled: true, conflictStrategy: 'lww', priority: 'normal' },
   audit: { enabled: true },
@@ -44,7 +44,7 @@ export const OrderEntity: EntityDefinition<Order> = {
     color: 'green',
     showInNav: true,
     navOrder: 20,
-    navGroup: 'Crispy King',
+    navGroup: 'Fast Food',
   },
   sync: { enabled: true, conflictStrategy: 'lww', priority: 'critical' },
   audit: { enabled: true },
@@ -68,7 +68,7 @@ export const OrderItemEntity: EntityDefinition<OrderItem> = {
     color: 'blue',
     showInNav: false, // Accessed from within orders
     navOrder: 25,
-    navGroup: 'Crispy King',
+    navGroup: 'Fast Food',
   },
   sync: { enabled: true, conflictStrategy: 'lww', priority: 'critical' },
   audit: { enabled: true },
@@ -92,7 +92,7 @@ export const InventoryItemEntity: EntityDefinition<InventoryItem> = {
     color: 'purple',
     showInNav: true,
     navOrder: 30,
-    navGroup: 'Crispy King',
+    navGroup: 'Fast Food',
   },
   sync: { enabled: true, conflictStrategy: 'lww', priority: 'normal' },
   audit: { enabled: true },
@@ -116,7 +116,7 @@ export const DailySalesEntity: EntityDefinition<DailySales> = {
     color: 'blue',
     showInNav: true,
     navOrder: 40,
-    navGroup: 'Crispy King',
+    navGroup: 'Fast Food',
   },
   sync: { enabled: true, conflictStrategy: 'lww', priority: 'background' },
   audit: { enabled: true, excludeFields: ['version'] },

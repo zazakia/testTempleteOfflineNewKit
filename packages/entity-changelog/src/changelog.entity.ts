@@ -18,7 +18,7 @@ export const ChangelogEntity: EntityDefinition<ChangelogEntry> = {
     routePath: 'changelog',
     color: 'blue',
     showInNav: true,
-    navOrder: 96,
+    navOrder: 90,
     navGroup: 'Administration',
   },
 

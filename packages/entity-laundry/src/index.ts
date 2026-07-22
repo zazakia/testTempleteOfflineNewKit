@@ -118,6 +118,10 @@ export {
   PROMO_TARGET_LABELS,
 } from './laundry.schema'
 
+// ─── Aggregate Root ────────────────────────────────────────
+export { LaundryOrderAggregate } from './laundry.aggregate'
+export type { LaundryDomainEvent, OrderPlacedEvent, OrderStatusChangedEvent, PaymentRecordedEvent } from './laundry.aggregate'
+
 // ─── Services ──────────────────────────────────────────────
 export {
   LaundryCustomerService,

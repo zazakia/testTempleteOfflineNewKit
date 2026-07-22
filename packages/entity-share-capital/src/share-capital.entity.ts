@@ -16,6 +16,7 @@ export const ShareCapitalEntity: EntityDefinition<ShareCapitalTransaction> = {
     color: 'green',
     showInNav: true,
     navOrder: 20,
+    navGroup: 'Cooperative',
   },
   sync: {
     enabled: true,

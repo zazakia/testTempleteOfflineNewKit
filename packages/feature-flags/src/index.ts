@@ -174,14 +174,14 @@ featureFlags.defineMany([
   {
     key: 'module.cooperative',
     description: 'Enable Cooperative ERP (members, loans, savings, share capital, accounting, collections, governance)',
-    enabled: false,
-    default: false,
+    enabled: true,
+    default: true,
   },
   {
     key: 'module.customer',
     description: 'Enable legacy Customer CRM',
-    enabled: false,
-    default: false,
+    enabled: true,
+    default: true,
   },
 
   // ═══ Business Client Systems ═══
@@ -194,26 +194,26 @@ featureFlags.defineMany([
   {
     key: 'module.clinic',
     description: 'Enable Clinic Management System (patients, doctors, appointments, billing)',
-    enabled: false,
-    default: false,
+    enabled: true,
+    default: true,
   },
   {
     key: 'module.driving-school',
     description: 'Enable Driving School Management System (students, instructors, courses, enrollments, schedules, payments, vehicles)',
-    enabled: false,
-    default: false,
+    enabled: true,
+    default: true,
   },
   {
     key: 'module.fastfood',
     description: 'Enable Crispy King Fast Food POS (menu, orders, inventory, daily sales)',
-    enabled: false,
-    default: false,
+    enabled: true,
+    default: true,
   },
   {
     key: 'module.water-station',
     description: 'Enable Water Station Management System',
-    enabled: false,
-    default: false,
+    enabled: true,
+    default: true,
   },
 
   // ═══ Other Features ═══

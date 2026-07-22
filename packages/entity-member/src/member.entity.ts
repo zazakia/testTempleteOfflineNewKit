@@ -20,6 +20,7 @@ export const MemberEntity: EntityDefinition<Member> = {
     color: 'blue',
     showInNav: true,
     navOrder: 10,
+    navGroup: 'Cooperative',
   },
 
   sync: {
